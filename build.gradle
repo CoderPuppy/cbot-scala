@@ -1,0 +1,37 @@
+ext {
+	info = [
+		group: 'cpup.cbot',
+		name: 'cbot',
+		version: 'dev',
+		
+		dependencies: [
+			compile: [
+				'cpup.lib:cpup-lib:dev',
+				'org.pircbotx:pircbotx:2.0.1',
+                'org.slf4j:slf4j-simple:1.7.6'
+			]
+		]
+	]
+}
+
+apply plugin: 'java'
+
+repositories {
+	mavenCentral()
+	mavenLocal()
+}
+
+info.dependencies.each { type, deps ->
+	deps.each { dependencies."$type"(it) }
+}
+
+apply plugin: 'scala'
+dependencies.compile 'org.scala-lang:scala-library:2.10.3'
+
+apply plugin: 'idea'
+
+apply plugin: 'maven'
+
+archivesBaseName = info.name
+group = info.group
+version = info.version
