@@ -3,7 +3,9 @@ package cpup.cbot.plugin
 import cpup.cbot.events.{Replyable, MessageEvent, UserEvent, Event}
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
-import cpup.cbot.plugin.CommandPlugin.{ChannelCommandEvent, TCommandEvent}
+import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
+import cpup.cbot.CBot
+import scala.collection.mutable
 
 class CommandPlugin(val commandSymbol: String) extends Plugin {
 	@Subscribe
@@ -30,9 +32,32 @@ class CommandPlugin(val commandSymbol: String) extends Plugin {
 }
 
 object CommandPlugin {
-	trait TCommandEvent extends Event with UserEvent with Replyable {
+	trait TCommandCheckEvent extends Event {
+		def command(name: String, handle: (TCommandEvent, () => Unit) => Any) {
+			command(name, List(), handle)
+		}
+
+		def command(name: String, usage: String, handle: (TCommandEvent, () => Unit) => Any) {
+			command(name, List(usage), handle)
+		}
+
+		def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any): Unit
+	}
+
+	trait TCommandEvent extends Event with UserEvent with Replyable with TCommandCheckEvent {
 		def cmd: String
 		def args: Seq[String]
+
+		override def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any) {
+			if(name == cmd) {
+				handle(this, () => {
+					reply("Usage: ")
+					for(usage <- usages) {
+						reply(s" - $cmd $usage")
+					}
+				})
+			}
+		}
 	}
 
 	case class CommandEvent[MSG <: MessageEvent with UserEvent with Replyable](msgEvent: MSG, cmd: String, args: Seq[String]) extends TCommandEvent {
