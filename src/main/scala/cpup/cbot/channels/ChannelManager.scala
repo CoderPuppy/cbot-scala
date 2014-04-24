@@ -4,20 +4,44 @@ import scala.collection.mutable
 import cpup.cbot.CBot
 import cpup.cbot.events.ConnectedEvent
 import com.google.common.eventbus.Subscribe
-import cpup.cbot.events.channel.KickEvent
+import cpup.cbot.events.channel.{JoinEvent, KickEvent}
+import org.pircbotx
+import org.pircbotx.hooks.events
+import org.pircbotx.PircBotX
 
 class ChannelManager(val bot: CBot) {
 	bot.bus.register(this)
 
-	val channels = new mutable.HashMap[String, Channel]
+	protected val channels = new mutable.HashMap[String, (Channel, pircbotx.Channel)]
+	def current = channels.values.map(_._1)
 
 	def join(_name: String) = {
 		val name = Channel.unifyName(_name)
-		channels.getOrElseUpdate(name, get(_name))
+		val chan = channels.getOrElseUpdate(name, {
+			val channel = get(_name)
+			bot.bus.post(new JoinEvent(bot, channel))
+			(channel, null)
+		})
+		if(bot.isConnected) {
+			joinChannel(chan._1)
+		}
+		chan._1
 	}
 	def join(chan: Channel): Channel = join(chan.name)
 
-	val channelCache = new mutable.WeakHashMap[String, Channel]
+	def leave(_name: String, reason: String = "Leave") = {
+		val name = Channel.unifyName(_name)
+		if(channels.contains(name)) {
+			val chan = channels.remove(name).get
+			if(bot.isConnected) {
+				chan._2.send.part(reason)
+			}
+		}
+		this
+	}
+	def leave(chan: Channel): ChannelManager = leave(chan.name)
+
+	protected val channelCache = new mutable.WeakHashMap[String, Channel]
 
 	def get(_name: String) = {
 		val name = Channel.unifyName(_name)
@@ -25,13 +49,17 @@ class ChannelManager(val bot: CBot) {
 	}
 	def apply(name: String) = get(name)
 
+	protected def joinChannel(channel: Channel) {
+		if(channel.key == null) {
+			bot.pBot.sendIRC.joinChannel(s"#${channel.name}")
+		} else {
+			bot.pBot.sendIRC.joinChannel(s"#${channel.name}", channel.key)
+		}
+	}
+
 	def joinChannels {
 		for((name, channel) <- channels) {
-			if(channel.key == null) {
-				bot.pBot.sendIRC.joinChannel(s"#${channel.name}")
-			} else {
-				bot.pBot.sendIRC.joinChannel(s"#${channel.name}", channel.key)
-			}
+			joinChannel(channel._1)
 		}
 	}
 
@@ -41,12 +69,28 @@ class ChannelManager(val bot: CBot) {
 	}
 
 	@Subscribe
+	def onJoin(e: events.JoinEvent[PircBotX]) {
+		val name = Channel.unifyName(e.getChannel.getName)
+		channels.get(name) match {
+			case Some((chan, null)) =>
+				channels(name) = (chan, e.getChannel)
+
+			case _ =>
+		}
+	}
+
+	@Subscribe
+	def onLeave(e: events.PartEvent[PircBotX]) {
+		channels.remove(Channel.unifyName(e.getChannel.getName))
+	}
+
+	@Subscribe
 	def kicked(e: KickEvent) {
-		if(e.kicked == bot.user && channels(e.channel.name) == e.channel) {
+		if(e.kicked == bot.user) {
 			if(e.channel.rejoin) {
 				bot.pBot.sendIRC.joinChannel(s"#${e.channel.name}")
 			} else {
-				channels(e.channel.name) = null
+				channels.remove(e.channel.name)
 			}
 		}
 	}
