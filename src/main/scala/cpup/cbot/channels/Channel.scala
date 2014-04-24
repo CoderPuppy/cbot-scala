@@ -1,9 +1,9 @@
 package cpup.cbot.channels
 
 import cpup.cbot.CBot
-import cpup.cbot.plugin.{AlreadyRegisteredPluginException, Plugin}
+import cpup.cbot.plugin.PluginManager
 
-class Channel(val bot: CBot, val name: String, var key: String) {
+case class Channel(bot: CBot, name: String, key: String) extends PluginManager {
 	def this(bot: CBot, name: String) {
 		this(bot, name, null)
 	}
@@ -14,19 +14,18 @@ class Channel(val bot: CBot, val name: String, var key: String) {
 		this
 	}
 
-	var plugins = List[Plugin]()
-	def plugin(plugin: Plugin) {
-		if(plugin.channel != null) {
-			throw new AlreadyRegisteredPluginException(plugin.toString)
-		}
-
-		plugins ::= plugin
-		plugin.init(this)
-	}
+	val send = new ChannelSend(this)
 }
 
 object Channel {
 	def unifyName(name: String) = if(name.charAt(0) == '#') {
 		name.substring(1)
 	} else { name }
+}
+
+case class ChannelSend(chan: Channel) {
+	def msg(msg: String) = {
+		chan.bot.pBot.sendIRC.message(s"#${chan.name}", msg)
+		this
+	}
 }

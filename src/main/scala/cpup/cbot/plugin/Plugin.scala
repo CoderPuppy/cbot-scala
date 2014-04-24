@@ -1,22 +1,17 @@
 package cpup.cbot.plugin
 
-import cpup.cbot.channels.Channel
 
 trait Plugin {
-	protected var _channel: Channel = null
-	def channel = _channel
-	def channel_=(newVal: Channel) = {
-		if(_channel == null) {
-			_channel = newVal
-			newVal
-		} else {
-			throw new AlreadyRegisteredPluginException(this.toString)
-		}
+	protected var _managers = Set[PluginManager]()
+	def managers = _managers
+
+	def enable(manager: PluginManager) {
+		_managers += manager
+		manager.bus.register(this)
 	}
 
-	def init(_channel: Channel) {
-		channel = _channel
+	def disable(manager: PluginManager) {
+		_managers -= manager
+		manager.bus.unregister(this)
 	}
 }
-
-class AlreadyRegisteredPluginException(plugin: String) extends Exception(plugin + " is already registered to a channel")

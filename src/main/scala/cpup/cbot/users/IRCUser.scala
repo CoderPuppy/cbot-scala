@@ -22,4 +22,12 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 
 		this
 	}
+
+	val send = IRCUserSend(this)
+}
+
+case class IRCUserSend(user: IRCUser) {
+	def msg(msg: String) {
+		user.bot.pBot.sendIRC.message(user.nick, msg)
+	}
 }

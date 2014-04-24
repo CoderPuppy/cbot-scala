@@ -5,6 +5,7 @@ import scala.collection.mutable
 import cpup.cbot.CBot
 import java.lang.reflect.Constructor
 import org.pircbotx.hooks.events.ConnectEvent
+import cpup.cbot.events.channel.{KickEvent, ChannelMessageEvent}
 
 object EventWrapper {
 	protected val events = new mutable.HashMap[Class[hooks.Event[PircBotX]], Class[Event]]
@@ -22,8 +23,7 @@ object EventWrapper {
 			params.length == 2 && params(0) == classOf[CBot] && params(1) == pClass
 		}).isEmpty) {
 			println("no constructor(" + pClass.getCanonicalName + ")")
-			System.exit(1)
-			throw new Exception("no constructor(" + pClass.getCanonicalName + ")")
+			throw new RuntimeException("no constructor(" + pClass.getCanonicalName + ")")
 		}
 
 		events.put(pClass.asInstanceOf[Class[hooks.Event[PircBotX]]], eClass.asInstanceOf[Class[Event]])
@@ -31,4 +31,5 @@ object EventWrapper {
 
 	EventWrapper.register(classOf[ConnectEvent[PircBotX]], classOf[ConnectedEvent])
 	EventWrapper.register(classOf[hooks.events.MessageEvent[PircBotX]], classOf[ChannelMessageEvent])
+	EventWrapper.register(classOf[hooks.events.KickEvent[PircBotX]], classOf[KickEvent])
 }

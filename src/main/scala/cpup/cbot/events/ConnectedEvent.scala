@@ -8,4 +8,6 @@ class ConnectedEvent(val bot: CBot) extends Event {
 	def this(bot: CBot, event: ConnectEvent[PircBotX]) {
 		this(bot)
 	}
+
+	override def pluginManager = bot
 }
