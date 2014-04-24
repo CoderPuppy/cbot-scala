@@ -9,14 +9,18 @@ trait PluginManager {
 	def plugins = _plugins
 	
 	def enablePlugin(plugin: Plugin) = {
-		_plugins += plugin
-		plugin.enable(this)
+		if(!_plugins.contains(plugin)) {
+			_plugins += plugin
+			plugin.enable(this)
+		}
 		this
 	}
 
 	def disablePlugin(plugin: Plugin) = {
-		_plugins -= plugin
-		plugin.disable(this)
+		if(_plugins.contains(plugin)) {
+			_plugins -= plugin
+			plugin.disable(this)
+		}
 		this
 	}
 }
