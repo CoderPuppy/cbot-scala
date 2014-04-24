@@ -34,6 +34,7 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with PluginManager 
 
 	def onEvent(pEvent: hooks.Event[PircBotX]) {
 		println(pEvent)
+		bus.post(pEvent)
 		if(EventWrapper.canWrap(pEvent)) {
 			val e = EventWrapper.wrap(this, pEvent)
 			println(e)
@@ -45,6 +46,8 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with PluginManager 
 	def repostChannelEvent(e: ChannelEvent) {
 		e.channel.bus.post(e)
 	}
+
+	def isConnected = pBot.isConnected
 
 	@Subscribe
 	def connected(e: ConnectedEvent) {
