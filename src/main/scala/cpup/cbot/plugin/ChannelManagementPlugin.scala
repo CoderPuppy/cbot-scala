@@ -47,8 +47,8 @@ class ChannelManagementPlugin extends Plugin {
 										return ()
 									}
 
-									e.bot.channels.leave(chan)
 									e.reply(s"Leaving #${Channel.unifyName(chan)}")
+									e.bot.channels.leave(chan)
 								}
 							}
 
