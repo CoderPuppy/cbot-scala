@@ -5,11 +5,11 @@ import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
 
-class CommandPlugin(val commandSymbol: String) extends Plugin {
+case class CommandPlugin(commandSymbol: String) extends Plugin {
 	@Subscribe
 	def commandMessage(e: MessageEvent) {
 		e match {
-			case ev: UserEvent with Replyable if e.msg.substring(0, commandSymbol.length) == commandSymbol =>
+			case ev: UserEvent with Replyable if e.msg.startsWith(commandSymbol) =>
 				val parts = e.msg.substring(commandSymbol.length).split(' ')
 				if(parts.length >= 1) {
 					val event = CommandPlugin.CommandEvent(
