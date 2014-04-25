@@ -25,9 +25,9 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 		e.command(
 			name = "plugins",
 			usages = List(
-				"list",
-				"enable <plugin>",
-				"disable <plugin>"
+				"list [context]",
+				"enable [context] <plugin>",
+				"disable [context] <plugin>"
 			),
 			handle = (e: TCommandEvent, printUsage: () => Unit) => {
 				if(e.args.length < 1) {
@@ -35,7 +35,17 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 				} else {
 					e.args(0) match {
 						case "list" => {
-							val enabledPlugins = e.context.plugins.map(convertToName)
+							var context = e.context
+
+							if(e.args.length >= 2) {
+								if(e.args(1) == "@") {
+									context = e.bot
+								} else {
+									context = e.bot.channels(e.args(1))
+								}
+							}
+
+							val enabledPlugins = context.plugins.map(convertToName)
 							e.reply(s"Enabled Plugins: ${enabledPlugins.mkString(", ")}")
 							e.reply(s"Available Plugins: ${(plugins.keySet -- enabledPlugins).mkString(", ")}")
 						}
@@ -44,17 +54,28 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
-								if(!e.checkPermission('plugins)) {
+								var context = e.context
+								var pluginsArg = e.args(1)
+
+								if(e.args.length >= 3) {
+									if(e.args(1) == "@") {
+										context = e.bot
+									} else {
+										context = e.bot.channels(e.args(1))
+									}
+									pluginsArg = e.args(2)
+								}
+
+								if(!context.checkPermission(e.user.user, 'plugins)) {
 									e.reply("Insufficient Permissions")
 									return ()
 								}
 
-								for(arg <- e.args.view(1, e.args.length)) {
-									println(s"'$arg'")
+								for(arg <- pluginsArg.split(",")) {
 									plugins.get(arg) match {
 										case Some(plugin) =>
-											e.genericReply(s"Enabling plugin: $arg")
-											e.context.enablePlugin(plugin)
+											e.genericReply(s"Enabling plugin: $arg in $context")
+											context.enablePlugin(plugin)
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")
@@ -67,20 +88,32 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
-								if(!e.checkPermission('plugins)) {
+								var context = e.context
+								var pluginsArg = e.args(1)
+
+								if(e.args.length >= 3) {
+									if(e.args(1) == "@") {
+										context = e.bot
+									} else {
+										context = e.bot.channels(e.args(1))
+									}
+									pluginsArg = e.args(2)
+								}
+
+								if(!context.checkPermission(e.user.user, 'plugins)) {
 									e.reply("Insufficient Permissions")
 									return ()
 								}
 
-								val enabledPlugins = e.context.plugins.map((pl) => {
+								val enabledPlugins = context.plugins.map((pl) => {
 									(convertToName(pl), pl)
 								}).toMap
 
-								for(arg <- e.args.view(1, e.args.length)) {
+								for(arg <- pluginsArg.split(",")) {
 									enabledPlugins.get(arg) match {
 										case Some(plugin) =>
-											e.genericReply(s"Disabling plugin: $arg")
-											e.context.disablePlugin(plugin)
+											e.genericReply(s"Disabling plugin: $arg in $context")
+											context.disablePlugin(plugin)
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")
