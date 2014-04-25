@@ -3,6 +3,7 @@ package cpup.cbot.users
 import cpup.cbot.CBot
 import scala.util.Random
 import scala.collection.mutable
+import cpup.cbot.channels.Channel
 
 case class User(val bot: CBot,
 	            var username: String,
@@ -16,6 +17,24 @@ case class User(val bot: CBot,
 		permissions += permission
 		this
 	}
+
+	def takePermission(permission: Symbol) = {
+		permissions -= permission
+		this
+	}
+
+	def grantPermission(chan: String, permission: Symbol) = {
+		channelPermissions.addBinding(Channel.unifyName(chan), permission)
+		this
+	}
+
+	def takePermission(chan: String, permission: Symbol) = {
+		channelPermissions.removeBinding(Channel.unifyName(chan), permission)
+		this
+	}
+
+	def grantPermission(chan: Channel, permission: Symbol): User = grantPermission(chan.name, permission)
+	def takePermission(chan: Channel, permission: Symbol): User = takePermission(chan.name, permission)
 }
 
 object User {

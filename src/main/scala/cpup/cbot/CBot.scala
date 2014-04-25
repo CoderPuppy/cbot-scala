@@ -14,6 +14,8 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 		this(config.finish)
 	}
 
+	override def toString = s"CBot(${config.server}, ${user.nick})"
+
 	bus.register(this)
 
 	val pConfig = new Configuration.Builder[PircBotX]
@@ -35,7 +37,11 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 
 	override def getPermissions(user: User) = user.permissions.toSet
 	override def grantPermission(user: User, permission: Symbol) = {
-		user.grantPermission(permission)
+		user.permissions += permission
+		this
+	}
+	override def takePermission(user: User, permission: Symbol) = {
+		user.permissions -= permission
 		this
 	}
 

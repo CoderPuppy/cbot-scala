@@ -8,4 +8,5 @@ trait Context extends PluginManager {
 
 	def checkPermission(user: User, permission: Symbol) = getPermissions(user).contains(permission)
 	def grantPermission(user: User, permission: Symbol): Context
+	def takePermission(user: User, permission: Symbol): Context
 }

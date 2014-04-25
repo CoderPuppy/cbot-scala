@@ -1,7 +1,6 @@
 package cpup.cbot.channels
 
 import cpup.cbot.{Context, CBot}
-import cpup.cbot.plugin.PluginManager
 import cpup.cbot.users.User
 import scala.collection.mutable
 
@@ -9,6 +8,8 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 	def this(bot: CBot, name: String) {
 		this(bot, name, null)
 	}
+
+	override def toString = s"#$name"
 
 	var rejoin = false
 	def setRejoin(newVal: Boolean) = {
@@ -23,6 +24,10 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 	}
 	override def grantPermission(user: User, permission: Symbol) = {
 		user.channelPermissions.addBinding(name, permission)
+		this
+	}
+	override def takePermission(user: User, permission: Symbol) = {
+		user.channelPermissions.removeBinding(name, permission)
 		this
 	}
 }
