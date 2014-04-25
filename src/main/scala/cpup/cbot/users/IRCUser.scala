@@ -10,7 +10,8 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 	var realName: String = null
 	var username: String = null
 
-	var user: User = new GuestUser(this)
+	val guestUser = new GuestUser(this)
+	var user: User = guestUser
 
 	def this(bot: CBot, nick: String) { this(bot, nick, null) }
 
@@ -33,6 +34,10 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 		// TODO: transfer data?
 
 		this
+	}
+
+	def logout {
+		user = guestUser
 	}
 
 	def updateWhoIs {
