@@ -31,6 +31,7 @@ class ChannelManagementPlugin extends Plugin {
 								}
 
 								e.bot.channels.join(e.args(1))
+								e.reply(s"Joining ${e.args(1)}")
 							}
 
 						case "leave" =>
@@ -43,6 +44,7 @@ class ChannelManagementPlugin extends Plugin {
 								}
 
 								e.bot.channels.leave(e.args(1))
+								e.reply(s"Leaving ${e.args(1)}")
 							}
 
 						case _ =>
