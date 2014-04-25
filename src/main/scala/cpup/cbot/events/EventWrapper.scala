@@ -31,5 +31,6 @@ object EventWrapper {
 
 	EventWrapper.register(classOf[ConnectEvent[PircBotX]], classOf[ConnectedEvent])
 	EventWrapper.register(classOf[hooks.events.MessageEvent[PircBotX]], classOf[ChannelMessageEvent])
+	EventWrapper.register(classOf[hooks.events.PrivateMessageEvent[PircBotX]], classOf[PrivateMessageEvent])
 	EventWrapper.register(classOf[hooks.events.KickEvent[PircBotX]], classOf[KickEvent])
 }
