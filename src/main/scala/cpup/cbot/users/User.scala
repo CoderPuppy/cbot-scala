@@ -1,17 +1,24 @@
 package cpup.cbot.users
 
-import cpup.cbot.CBot
+import cpup.cbot.{Context, CBot}
 import scala.util.Random
 import scala.collection.mutable
 import cpup.cbot.channels.Channel
 
 case class User(val bot: CBot,
 	            var username: String,
-	            var password: String) {
+	            var password: String) extends Context {
+	override def toString = s"@$username"
+
 	var users = Set[IRCUser]()
 
 	val permissions = new mutable.HashSet[Symbol]()
-	val channelPermissions: mutable.MultiMap[String, Symbol] = new mutable.HashMap[String, mutable.Set[Symbol]]() with mutable.MultiMap[String, Symbol]
+	val channelPermissions = new mutable.HashMap[String, mutable.Set[Symbol]]() with mutable.MultiMap[String, Symbol]
+
+	override def getPermissions(user: User) = if(user == this) Set('all) else Set()
+	override def checkPermission(user: User, permission: Symbol) = user == this
+	override def grantPermission(user: User, permission: Symbol) = this
+	override def takePermission(user: User, permission: Symbol) = this
 
 	def grantPermission(permission: Symbol) = {
 		permissions += permission

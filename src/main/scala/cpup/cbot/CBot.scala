@@ -4,7 +4,7 @@ import org.pircbotx.{Configuration, PircBotX, hooks}
 import cpup.cbot.channels.ChannelManager
 import org.pircbotx.hooks.{WaitForQueue, Listener}
 import com.google.common.eventbus.{Subscribe, EventBus}
-import cpup.cbot.events.{ConnectedEvent, EventWrapper}
+import cpup.cbot.events.{UserEvent, ConnectedEvent, EventWrapper}
 import cpup.cbot.users.{User, IRCUser, UserManager}
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.PluginManager
@@ -59,6 +59,11 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	@Subscribe
 	def repostChannelEvent(e: ChannelEvent) {
 		e.channel.bus.post(e)
+	}
+
+	@Subscribe
+	def repostUserEvent(e: UserEvent) {
+		e.user.user.bus.post(e)
 	}
 
 	def isConnected = pBot.isConnected
