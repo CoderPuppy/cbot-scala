@@ -25,13 +25,23 @@ class ChannelManagementPlugin extends Plugin {
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
+								if(!e.bot.channels(e.args(1)).checkPermission(e.user.user, 'channels)) {
+									e.reply("Insufficient Permissions")
+									return ()
+								}
+
 								e.bot.channels.join(e.args(1))
 							}
 
 						case "leave" =>
 							if(e.args.length < 2) {
-								printUsage()
+									printUsage()
 							} else {
+								if(!e.bot.channels(e.args(1)).checkPermission(e.user.user, 'channels)) {
+									e.reply("Insufficient Permissions")
+									return ()
+								}
+
 								e.bot.channels.leave(e.args(1))
 							}
 

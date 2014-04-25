@@ -9,5 +9,5 @@ class ConnectedEvent(val bot: CBot) extends Event {
 		this(bot)
 	}
 
-	override def pluginManager = bot
+	override def context = bot
 }

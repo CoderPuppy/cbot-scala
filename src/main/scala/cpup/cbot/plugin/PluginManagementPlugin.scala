@@ -35,7 +35,7 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 				} else {
 					e.args(0) match {
 						case "list" => {
-							val enabledPlugins = e.pluginManager.plugins.map(convertToName)
+							val enabledPlugins = e.context.plugins.map(convertToName)
 							e.reply(s"Enabled Plugins: ${enabledPlugins.mkString(", ")}")
 							e.reply(s"Available Plugins: ${(plugins.keySet -- enabledPlugins).mkString(", ")}")
 						}
@@ -44,12 +44,17 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
+								if(!e.checkPermission('plugins)) {
+									e.reply("Insufficient Permissions")
+									return ()
+								}
+
 								for(arg <- e.args.view(1, e.args.length)) {
 									println(s"'$arg'")
 									plugins.get(arg) match {
 										case Some(plugin) =>
 											e.genericReply(s"Enabling plugin: $arg")
-											e.pluginManager.enablePlugin(plugin)
+											e.context.enablePlugin(plugin)
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")
@@ -62,7 +67,12 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
-								val enabledPlugins = e.pluginManager.plugins.map((pl) => {
+								if(!e.checkPermission('plugins)) {
+									e.reply("Insufficient Permissions")
+									return ()
+								}
+
+								val enabledPlugins = e.context.plugins.map((pl) => {
 									(convertToName(pl), pl)
 								}).toMap
 
@@ -70,7 +80,7 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 									enabledPlugins.get(arg) match {
 										case Some(plugin) =>
 											e.genericReply(s"Disabling plugin: $arg")
-											e.pluginManager.disablePlugin(plugin)
+											e.context.disablePlugin(plugin)
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")

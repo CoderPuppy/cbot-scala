@@ -1,9 +1,11 @@
 package cpup.cbot.channels
 
-import cpup.cbot.CBot
+import cpup.cbot.{Context, CBot}
 import cpup.cbot.plugin.PluginManager
+import cpup.cbot.users.User
+import scala.collection.mutable
 
-case class Channel(bot: CBot, name: String, key: String) extends PluginManager {
+case class Channel(bot: CBot, name: String, key: String) extends Context {
 	def this(bot: CBot, name: String) {
 		this(bot, name, null)
 	}
@@ -15,6 +17,14 @@ case class Channel(bot: CBot, name: String, key: String) extends PluginManager {
 	}
 
 	val send = new ChannelSend(this)
+
+	override def getPermissions(user: User) = {
+		bot.getPermissions(user) ++ user.channelPermissions.getOrElseUpdate(name, new mutable.HashSet[Symbol]())
+	}
+	override def grantPermission(user: User, permission: Symbol) = {
+		user.channelPermissions.addBinding(name, permission)
+		this
+	}
 }
 
 object Channel {

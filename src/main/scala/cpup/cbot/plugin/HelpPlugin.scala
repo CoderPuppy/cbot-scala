@@ -22,7 +22,7 @@ class HelpPlugin extends Plugin {
 					e
 				)
 
-				e.pluginManager.bus.post(query)
+				e.context.bus.post(query)
 				e.bot.bus.post(query)
 
 				()
@@ -50,6 +50,6 @@ object HelpPlugin {
 			}
 		}
 
-		override def pluginManager = bot
+		override def context = bot
 	}
 }

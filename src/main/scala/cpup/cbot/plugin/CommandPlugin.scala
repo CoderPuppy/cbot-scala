@@ -4,8 +4,6 @@ import cpup.cbot.events.{Replyable, MessageEvent, UserEvent, Event}
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
-import cpup.cbot.CBot
-import scala.collection.mutable
 
 class CommandPlugin(val commandSymbol: String) extends Plugin {
 	@Subscribe
@@ -66,7 +64,7 @@ object CommandPlugin {
 		override def reply(msg: String) { msgEvent.reply(msg) }
 		override def genericReply(msg: String) { msgEvent.genericReply(msg) }
 		override def privateReply(msg: String) { msgEvent.privateReply(msg) }
-		override def pluginManager = msgEvent.pluginManager
+		override def context = msgEvent.context
 	}
 
 	case class ChannelCommandEvent[MSG <: MessageEvent with UserEvent with Replyable with ChannelEvent](commandEvent: CommandEvent[_ <: MessageEvent with UserEvent with Replyable], msgEvent: MSG) extends TCommandEvent with ChannelEvent {
@@ -78,6 +76,6 @@ object CommandPlugin {
 		override def channel = msgEvent.channel
 		override def cmd = commandEvent.cmd
 		override def args = commandEvent.args
-		override def pluginManager = commandEvent.pluginManager
+		override def context = commandEvent.context
 	}
 }

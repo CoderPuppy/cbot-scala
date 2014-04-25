@@ -2,14 +2,14 @@ package cpup.cbot
 
 import org.pircbotx.{Configuration, PircBotX, hooks}
 import cpup.cbot.channels.ChannelManager
-import org.pircbotx.hooks.Listener
+import org.pircbotx.hooks.{WaitForQueue, Listener}
 import com.google.common.eventbus.{Subscribe, EventBus}
 import cpup.cbot.events.{ConnectedEvent, EventWrapper}
-import cpup.cbot.users.{IRCUser, UserManager}
+import cpup.cbot.users.{User, IRCUser, UserManager}
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.PluginManager
 
-class CBot(val config: BotConfig) extends Listener[PircBotX] with PluginManager {
+class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	def this(config: BotConfig.Builder) {
 		this(config.finish)
 	}
@@ -21,6 +21,7 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with PluginManager 
 	pConfig.addListener(this)
 
 	val pBot = new PircBotX(pConfig.buildConfiguration)
+	val pEventQueue = new WaitForQueue(pBot)
 
 	val channels = new ChannelManager(this)
 	val users = new UserManager(this)
@@ -30,6 +31,12 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with PluginManager 
 
 	def connect {
 		pBot.startBot
+	}
+
+	override def getPermissions(user: User) = user.permissions.toSet
+	override def grantPermission(user: User, permission: Symbol) = {
+		user.grantPermission(permission)
+		this
 	}
 
 	def onEvent(pEvent: hooks.Event[PircBotX]) {
