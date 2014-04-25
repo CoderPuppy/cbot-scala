@@ -2,6 +2,7 @@ package cpup.cbot.plugin
 
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
+import cpup.cbot.channels.Channel
 
 class ChannelManagementPlugin extends Plugin {
 	@Subscribe
@@ -10,8 +11,8 @@ class ChannelManagementPlugin extends Plugin {
 			name = "channels",
 			usages = List(
 				"list",
-				"join <channel>",
-				"leave <channel>"
+				"join <channels>",
+				"leave <channels>"
 			),
 			handle = (e: TCommandEvent, printUsage: () => Unit) => {
 				if(e.args.length < 1) {
@@ -25,26 +26,30 @@ class ChannelManagementPlugin extends Plugin {
 							if(e.args.length < 2) {
 								printUsage()
 							} else {
-								if(!e.bot.channels(e.args(1)).checkPermission(e.user.user, 'channels)) {
-									e.reply("Insufficient Permissions")
-									return ()
-								}
+								for(chan <- e.args(1).split(",")) {
+									if(!e.bot.channels(chan).checkPermission(e.user.user, 'channels)) {
+										e.reply("Insufficient Permissions")
+										return ()
+									}
 
-								e.bot.channels.join(e.args(1))
-								e.reply(s"Joining ${e.args(1)}")
+									e.bot.channels.join(chan)
+									e.reply(s"Joining #${Channel.unifyName(chan)}")
+								}
 							}
 
 						case "leave" =>
 							if(e.args.length < 2) {
 									printUsage()
 							} else {
-								if(!e.bot.channels(e.args(1)).checkPermission(e.user.user, 'channels)) {
-									e.reply("Insufficient Permissions")
-									return ()
-								}
+								for(chan <- e.args(1).split(",")) {
+									if(!e.bot.channels(chan).checkPermission(e.user.user, 'channels)) {
+										e.reply("Insufficient Permissions")
+										return ()
+									}
 
-								e.bot.channels.leave(e.args(1))
-								e.reply(s"Leaving ${e.args(1)}")
+									e.bot.channels.leave(chan)
+									e.reply(s"Leaving #${Channel.unifyName(chan)}")
+								}
 							}
 
 						case _ =>
