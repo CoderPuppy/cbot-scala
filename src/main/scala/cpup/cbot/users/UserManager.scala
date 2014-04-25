@@ -8,17 +8,17 @@ import cpup.cbot.events.NickChangeEvent
 class UserManager(val bot: CBot) {
 	bot.bus.register(this)
 
-	val onlineUsers = new mutable.HashMap[String, IRCUser]
+	val onlineUsers = new mutable.WeakHashMap[String, IRCUser]
 	val registeredUsers = new mutable.HashMap[String, User]
 	val nickServUsers = new mutable.HashMap[String, User]
 
 	def fromNick(nick: String) = onlineUsers.getOrElseUpdate(nick, new IRCUser(bot, nick))
-	def fromNickServ(nickServ: String) = nickServUsers.getOrElse(nickServ, null)
+	def fromNickServ(nickserv: String) = nickServUsers.getOrElse(nickserv, null)
 	def fromUsername(username: String) = registeredUsers.getOrElse(username, null)
 
 	def apply(username: String) = fromUsername(username)
 
-	def register(username: String, password: String) = {
+	def register(username: String, password: String = null) = {
 		if(registeredUsers.contains(username)) {
 			throw new AlreadyRegisteredException("Username is already registered")
 		}
