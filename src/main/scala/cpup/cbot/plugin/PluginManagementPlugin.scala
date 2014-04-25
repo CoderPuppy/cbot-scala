@@ -38,10 +38,12 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 							var context = e.context
 
 							if(e.args.length >= 2) {
-								if(e.args(1) == "@") {
-									context = e.bot
+								val argContext = e.bot.getContext(e.args(1))
+								if(argContext != null) {
+									context = argContext
 								} else {
-									context = e.bot.channels(e.args(1))
+									e.reply(s"Unknown context: ${e.args(1)}")
+									return ()
 								}
 							}
 
@@ -92,10 +94,11 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 								var pluginsArg = e.args(1)
 
 								if(e.args.length >= 3) {
-									if(e.args(1) == "@") {
-										context = e.bot
+									val argContext = e.bot.getContext(e.args(1))
+									if(argContext != null) {
+										context = argContext
 									} else {
-										context = e.bot.channels(e.args(1))
+										e.reply(s"Unknown context: ${e.args(1)}")
 									}
 									pluginsArg = e.args(2)
 								}

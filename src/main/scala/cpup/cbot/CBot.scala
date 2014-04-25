@@ -36,6 +36,16 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 		pBot.startBot
 	}
 
+	def getContext(name: String) = if(name == "@") {
+		this
+	} else if(name.startsWith("@")) {
+		users.fromNick(name.substring(1)).user
+	} else if(name.startsWith("#")) {
+		channels(name.substring(1))
+	} else {
+		null
+	}
+
 	override def getPermissions(user: User) = user.permissions.toSet
 	override def grantPermission(user: User, permission: Symbol) = {
 		user.permissions += permission
