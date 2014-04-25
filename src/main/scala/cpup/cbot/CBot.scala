@@ -14,7 +14,7 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 		this(config.finish)
 	}
 
-	override def toString = s"CBot(${config.server}, ${user.nick})"
+	override def toString = s"CBot(${config.server}, ${user.username})"
 
 	bus.register(this)
 
@@ -28,8 +28,9 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	val channels = new ChannelManager(this)
 	val users = new UserManager(this)
 
-	protected var _user: IRCUser = null
-	def user = _user
+	protected var _ircUser: IRCUser = null
+	def ircUser = _ircUser
+	val user = new CBotUser(this)
 
 	def connect {
 		pBot.startBot
@@ -64,6 +65,11 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 
 	@Subscribe
 	def connected(e: ConnectedEvent) {
-		_user = users.fromNick(pBot.getNick)
+		_ircUser = users.fromNick(pBot.getNick)
+		_ircUser.user = user
 	}
+}
+
+class CBotUser(bot: CBot) extends User(bot, bot.config.username, null) {
+	override def toString = bot.toString
 }

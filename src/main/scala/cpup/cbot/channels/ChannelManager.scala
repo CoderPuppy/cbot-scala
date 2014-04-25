@@ -86,7 +86,7 @@ class ChannelManager(val bot: CBot) {
 
 	@Subscribe
 	def kicked(e: KickEvent) {
-		if(e.kicked == bot.user) {
+		if(e.kicked == bot.ircUser) {
 			if(e.channel.rejoin) {
 				bot.pBot.sendIRC.joinChannel(s"#${e.channel.name}")
 			} else {
