@@ -36,8 +36,12 @@ class UserManager(val bot: CBot) {
 	}
 
 	def registerNickServ(nickserv: String, user: User) = {
+		if(user == null) {
+			throw new NullPointerException("No user")
+		}
+
 		if(user.isInstanceOf[GuestUser]) {
-			throw new GuestUserException("Cannot register nickserv registration with this user")
+			throw new GuestUserException("Cannot register NickServ registration to a guest")
 		}
 
 		if(nickServUsers.contains(nickserv)) {
