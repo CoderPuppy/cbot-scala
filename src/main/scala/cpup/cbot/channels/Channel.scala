@@ -35,7 +35,7 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 object Channel {
 	def unifyName(name: String) = if(name.charAt(0) == '#') {
 		name.substring(1)
-	} else { name }
+	} else { name }.toLowerCase
 }
 
 case class ChannelSend(chan: Channel) {
