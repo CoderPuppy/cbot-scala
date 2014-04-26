@@ -4,7 +4,7 @@ import scala.collection.mutable
 import cpup.cbot.CBot
 import cpup.cbot.events.ConnectedEvent
 import com.google.common.eventbus.Subscribe
-import cpup.cbot.events.channel.{JoinEvent, KickEvent}
+import cpup.cbot.events.channel.{LeaveEvent, JoinEvent, KickEvent}
 import org.pircbotx
 import org.pircbotx.hooks.events
 import org.pircbotx.PircBotX
@@ -36,6 +36,8 @@ class ChannelManager(val bot: CBot) {
 			if(bot.isConnected) {
 				chan._2.send.part(reason)
 			}
+			bot.bus.post(new LeaveEvent(bot, chan._1))
+
 		}
 		this
 	}
