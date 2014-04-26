@@ -4,6 +4,7 @@ import cpup.cbot.{Context, CBot}
 import cpup.cbot.users.User
 import scala.collection.mutable
 import play.api.libs.json.{Writes, Json}
+import cpup.cbot.events.channel.ChannelUpdateEvent
 
 case class Channel(bot: CBot, name: String, key: String) extends Context {
 	def this(bot: CBot, name: String) {
@@ -12,9 +13,11 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 
 	override def toString = s"#$name"
 
-	var rejoin = false
+	protected var _rejoin = false
+	def rejoin = _rejoin
 	def setRejoin(newVal: Boolean) = {
-		rejoin = newVal
+		_rejoin = newVal
+		bot.bus.post(new ChannelUpdateEvent(bot, this))
 		this
 	}
 
@@ -23,13 +26,11 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 	override def getPermissions(user: User) = {
 		bot.getPermissions(user) ++ user.channelPermissions.getOrElseUpdate(name, new mutable.HashSet[Symbol]())
 	}
-	override def grantPermission(user: User, permission: Symbol) = {
+	override protected def _grantPermission(user: User, permission: Symbol) {
 		user.channelPermissions.addBinding(name, permission)
-		this
 	}
-	override def takePermission(user: User, permission: Symbol) = {
+	override protected def _takePermission(user: User, permission: Symbol) {
 		user.channelPermissions.removeBinding(name, permission)
-		this
 	}
 }
 

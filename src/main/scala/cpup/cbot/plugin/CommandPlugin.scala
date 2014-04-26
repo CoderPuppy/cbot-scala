@@ -1,9 +1,10 @@
 package cpup.cbot.plugin
 
-import cpup.cbot.events.{Replyable, MessageEvent, IRCUserEvent, Event}
+import cpup.cbot.events.{Replyable, MessageEvent, Event}
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
+import cpup.cbot.events.user.IRCUserEvent
 
 case class CommandPlugin(commandSymbol: String) extends Plugin {
 	@Subscribe
@@ -49,9 +50,9 @@ object CommandPlugin {
 		override def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any) {
 			if(name == cmd) {
 				handle(this, () => {
-					reply("Usage: ")
+					genericReply("Usage: ")
 					for(usage <- usages) {
-						reply(s" - $cmd $usage")
+						genericReply(s" - $cmd $usage")
 					}
 				})
 			}

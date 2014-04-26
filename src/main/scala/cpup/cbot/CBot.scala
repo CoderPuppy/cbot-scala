@@ -4,15 +4,18 @@ import org.pircbotx.{Configuration, PircBotX, hooks}
 import cpup.cbot.channels.ChannelManager
 import org.pircbotx.hooks.{WaitForQueue, Listener}
 import com.google.common.eventbus.{Subscribe, EventBus}
-import cpup.cbot.events.{IRCUserEvent, ConnectedEvent, EventWrapper}
+import cpup.cbot.events.{ConnectedEvent, EventWrapper}
 import cpup.cbot.users.{User, IRCUser, UserManager}
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.PluginManager
+import cpup.cbot.events.user.UserEvent
 
 class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	def this(config: BotConfig.Builder) {
 		this(config.finish)
 	}
+
+	override def bot = this
 
 	override def toString = s"CBot(${config.server}, ${user.username})"
 
@@ -47,13 +50,11 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	}
 
 	override def getPermissions(user: User) = user.permissions.toSet
-	override def grantPermission(user: User, permission: Symbol) = {
+	override protected def _grantPermission(user: User, permission: Symbol) {
 		user.permissions += permission
-		this
 	}
-	override def takePermission(user: User, permission: Symbol) = {
+	override protected def _takePermission(user: User, permission: Symbol) {
 		user.permissions -= permission
-		this
 	}
 
 	def onEvent(pEvent: hooks.Event[PircBotX]) {
@@ -72,8 +73,8 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 	}
 
 	@Subscribe
-	def repostUserEvent(e: IRCUserEvent) {
-		e.ircUser.user.bus.post(e)
+	def repostUserEvent(e: UserEvent) {
+		e.user.bus.post(e)
 	}
 
 	def isConnected = pBot.isConnected

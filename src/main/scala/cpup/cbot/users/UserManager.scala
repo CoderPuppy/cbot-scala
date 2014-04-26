@@ -3,7 +3,7 @@ package cpup.cbot.users
 import cpup.cbot.CBot
 import scala.collection.mutable
 import com.google.common.eventbus.Subscribe
-import cpup.cbot.events.NickChangeEvent
+import cpup.cbot.events.user.{RegisterNickServEvent, NickChangeEvent, RegisterEvent}
 
 class UserManager(val bot: CBot) {
 	bot.bus.register(this)
@@ -29,7 +29,25 @@ class UserManager(val bot: CBot) {
 			User.hash(password)
 		)
 		registeredUsers(username) = user
+
+		bot.bus.post(new RegisterEvent(bot, user))
+
 		user
+	}
+
+	def registerNickServ(nickserv: String, user: User) = {
+		if(user.isInstanceOf[GuestUser]) {
+			throw new GuestUserException("Cannot register nickserv registration with this user")
+		}
+
+		if(nickServUsers.contains(nickserv)) {
+			throw new AlreadyRegisteredException("NickServ account is already registered to an account")
+		}
+
+		bot.bus.post(new RegisterNickServEvent(bot, user, nickserv))
+		nickServUsers(nickserv) = user
+
+		this
 	}
 
 	@Subscribe

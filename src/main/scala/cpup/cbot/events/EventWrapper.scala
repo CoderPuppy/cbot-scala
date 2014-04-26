@@ -6,6 +6,7 @@ import cpup.cbot.CBot
 import java.lang.reflect.Constructor
 import org.pircbotx.hooks.events.ConnectEvent
 import cpup.cbot.events.channel.{KickEvent, ChannelMessageEvent}
+import cpup.cbot.events.user.PrivateMessageEvent
 
 object EventWrapper {
 	protected val events = new mutable.HashMap[Class[hooks.Event[PircBotX]], Class[Event]]

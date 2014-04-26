@@ -1,12 +1,13 @@
-package cpup.cbot.events
+package cpup.cbot.events.user
 
 import cpup.cbot.CBot
 import cpup.cbot.users.IRCUser
 import org.pircbotx.PircBotX
 import org.pircbotx.hooks.events
+import cpup.cbot.events.Event
 
 case class NickChangeEvent(bot: CBot, ircUser: IRCUser, oldNick: String, newNick: String) extends Event with IRCUserEvent {
-	def context = bot
+	override def context = bot
 
 	def this(bot: CBot, e: events.NickChangeEvent[PircBotX]) {
 		this(

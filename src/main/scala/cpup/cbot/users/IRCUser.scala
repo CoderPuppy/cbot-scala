@@ -3,6 +3,7 @@ package cpup.cbot.users
 import cpup.cbot.CBot
 import org.pircbotx.PircBotX
 import org.pircbotx.hooks.events.WhoisEvent
+import cpup.cbot.events.user.RegisterNickServEvent
 
 class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 	def ircUsers = List(this)
@@ -56,15 +57,7 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 
 	def registerNickServ {
 		updateWhoIs
-		if(user.isInstanceOf[GuestUser]) {
-			throw new GuestUserException("Cannot register nickserv registration with this user")
-		}
-
-		if(bot.users.nickServUsers.contains(nickserv)) {
-			throw new AlreadyRegisteredException("NickServ account is already registered to an account")
-		}
-
-		bot.users.nickServUsers(nickserv) = user
+		bot.users.registerNickServ(nickserv, user)
 	}
 
 	val send = IRCUserSend(this)
