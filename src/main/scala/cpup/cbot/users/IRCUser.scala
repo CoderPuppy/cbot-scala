@@ -3,7 +3,6 @@ package cpup.cbot.users
 import cpup.cbot.CBot
 import org.pircbotx.PircBotX
 import org.pircbotx.hooks.events.WhoisEvent
-import cpup.cbot.events.user.RegisterNickServEvent
 
 class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 	def ircUsers = List(this)

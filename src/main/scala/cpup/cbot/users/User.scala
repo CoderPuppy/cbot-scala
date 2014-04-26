@@ -4,7 +4,7 @@ import cpup.cbot.{Context, CBot}
 import scala.util.Random
 import scala.collection.mutable
 import cpup.cbot.channels.Channel
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Json
 import cpup.cbot.events.user.ChangePasswordEvent
 
 case class User(val bot: CBot,

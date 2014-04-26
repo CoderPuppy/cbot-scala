@@ -1,6 +1,6 @@
 package cpup.cbot.plugin
 
-import cpup.cbot.CBot
+import cpup.cbot.{Context, CBot}
 import java.io.{PrintWriter, File}
 import play.api.libs.json._
 import scala.io.Source
@@ -19,8 +19,14 @@ import cpup.cbot.events.channel.LeaveEvent
 import cpup.cbot.events.plugin.{DisablePluginEvent, EnablePluginEvent}
 import play.api.data.validation.ValidationError
 
-class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], val file: File) extends Plugin {
+class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _file: File) extends Plugin {
 	def pluginType: PluginType[_ <: SavingPlugin] = SavingPlugin
+
+	def file = _file
+	def file_=(newFile: File) = {
+		_file = newFile
+		newFile
+	}
 
 	val reversePluginTypes = pluginTypes.map(_.swap)
 
@@ -34,7 +40,7 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 
 	implicit val channelWrites = new Writes[Channel] {
 		def writes(chan: Channel) = Json.obj(
-			"name" -> chan.name,
+//			"name" -> chan.name,
 			"key" -> chan.key,
 			"rejoin" -> chan.rejoin,
 			"plugins" -> getPluginsForSaving(chan)
@@ -42,7 +48,7 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 	}
 	implicit val userWrites = new Writes[User] {
 		override def writes(user: User) = Json.obj(
-			"username" -> user.username,
+//			"username" -> user.username,
 			"password" -> user.password,
 			"permissions" -> user.permissions.toList.map(_.name),
 			"channelPermissions" -> user.channelPermissions.toMap.map((kv) => (kv._1, kv._2.toList.map(_.name))),
@@ -51,6 +57,7 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 	}
 
 	def save {
+		println("saving")
 		val json = Json.prettyPrint(Json.obj(
 			"channels" -> channels,
 			"users" -> users,
@@ -63,7 +70,7 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 		writer.close
 	}
 
-	override def enable(manager: PluginManager) = {
+	override def enable(manager: Context) = {
 		if(!managers.isEmpty) {
 			throw new AlreadyRegisteredException("already registered")
 		}
@@ -81,12 +88,14 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 				plugins = getPluginsForSaving(bot)
 				this.bot = bot
 
+				save
+
 			case _ =>
 				throw new ClassCastException("SavingPlugin only works for CBots")
 		}
 	}
 
-	override def disable(manager: PluginManager) = {
+	override def disable(manager: Context) = {
 		super.disable(manager)
 		channels = Json.obj()
 		users = Json.obj()
@@ -155,34 +164,30 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 	}
 
 	// -- Plugins -- \\
-	def getPluginName(pl: Plugin) = pluginManagement.reversePlugins.get(pl) match {
-		case Some(name) => s"@${name}"
-		case _ => s"${pl.getClass.getName}@${pl.hashCode}"
-	}
-
 	def updatePlugin(pl: Plugin): String = {
-		val name = getPluginName(pl)
+		val name = pl.toString
 		val inst = (pluginInsts \ name).validate[JsObject].getOrElse(Json.obj(
-			"name" -> name,
+//			"name" -> name,
 			"type" -> pl.pluginType.name,
-			"data" -> Json.toJson(pl)(pl.pluginType.format(bot, pluginManagement, pluginTypes, file).get.asInstanceOf[Format[Plugin]])
+			"id" -> pl.id,
+			"data" -> Json.toJson(pl)(pl.pluginType.writes(bot, pluginTypes).get.asInstanceOf[Writes[Plugin]])
 		))
 		pluginInsts -= name
 		pluginInsts += (name -> inst)
 		name
 	}
 
-	def getPluginsForSaving(manager: PluginManager): JsArray = new JsArray(manager.plugins.toList.filter((pl) => {
-		pl.pluginType.format(bot, pluginManagement, pluginTypes, file).isDefined
+	def getPluginsForSaving(manager: Context): JsArray = new JsArray(manager.plugins.toList.filter((pl) => {
+		pl.pluginType.writes(bot, pluginTypes).isDefined
 	}).map((pl) => {
 		new JsString(updatePlugin(pl))
 	}))
 
 	@Subscribe
 	def enable(e: EnablePluginEvent) {
-		if(e.plugin.pluginType.format(bot, pluginManagement, pluginTypes, file).isDefined) {
+		if(e.plugin.pluginType.writes(bot, pluginTypes).isDefined) {
 			val name = updatePlugin(e.plugin)
-			e.manager match {
+			e.context match {
 				case bot: CBot =>
 					if(plugins.value.find(_ match {
 						case str: JsString if str.value == name => true
@@ -205,9 +210,9 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 
 	@Subscribe
 	def disable(e: DisablePluginEvent) {
-		if(e.plugin.pluginType.format(bot, pluginManagement, pluginTypes, file).isDefined) {
-			val name = getPluginName(e.plugin)
-			e.manager match {
+		if(e.plugin.pluginType.writes(bot, pluginTypes).isDefined) {
+			val name = e.plugin.toString
+			e.context match {
 				case bot: CBot =>
 					plugins = new JsArray(plugins.value.filter(_ match {
 						case str: JsString if str == name => false
@@ -228,17 +233,18 @@ class SavingPlugin(val pluginManagement: PluginManagementPlugin, pluginTypes: Ma
 }
 
 object SavingPlugin extends PluginType[SavingPlugin] {
-	def name = "saving"
-	def format(bot: CBot, pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], file: File) = Some(Format[SavingPlugin](
-		new Reads[SavingPlugin] {
-			override def reads(json: JsValue) = JsSuccess(new SavingPlugin(pluginManagement, pluginTypes, file))
-		},
-		new Writes[SavingPlugin] {
-			override def writes(o: SavingPlugin) = JsNull
-		}
-	))
+	override def name = "saving"
 
-	def load(bot: CBot, pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], file: File) {
+	override def create(context: Context, pluginTypes: Map[String, PluginType[Plugin]]) = new SavingPlugin(pluginTypes, null)
+
+	override def reads(bot: CBot, pluginTypes: Map[String, PluginType[Plugin]], file: File) = Some(new Reads[SavingPlugin] {
+		override def reads(json: JsValue) = JsSuccess(new SavingPlugin(pluginTypes, file))
+	})
+	override def writes(bot: CBot, pluginTypes: Map[String, PluginType[Plugin]]) = Some(new Writes[SavingPlugin] {
+		override def writes(o: SavingPlugin) = JsNull
+	})
+
+	def load(bot: CBot, pluginTypes: Map[String, PluginType[Plugin]], file: File) {
 		val json: JsValue = Json.parse({
 			val source = Source.fromFile(file)
 			val contents = source.mkString
@@ -257,30 +263,31 @@ object SavingPlugin extends PluginType[SavingPlugin] {
 						}
 					})
 					.flatMap((pluginType) => {
-						pluginType.format(bot, pluginManagement, pluginTypes, file) match {
+						pluginType.reads(bot, pluginTypes, file) match {
 							case Some(format) => JsSuccess(format)
 							case _ => JsError(ValidationError("Unloadable", pluginType.name))
 						}
 					})
 					.flatMap((format) => {
-						(json \ "data").validate(format)
+						(json \ "data").validate(format).flatMap((pl) => {
+							(json \ "id").validate[String].map((id) => {
+								pl.id = id
+								pl
+							})
+						})
 					})
 			}
 		}
 
 		val plugins = (json \ "pluginInsts").as[Map[String, Plugin]]
 
-		for(kv <- plugins) {
-			if(kv._1.startsWith("@")) {
-				pluginManagement.registerPlugin(kv._1.substring(1), kv._2)
-			}
-		}
-
 		(json \ "plugins").as[List[String]].flatMap(plugins.get(_)).foreach(bot.enablePlugin(_))
 
-		(json \ "channels").as[Map[String, JsObject]].values.foreach((chanJSON) => {
+		(json \ "channels").as[Map[String, JsObject]].foreach((kv) => {
+			val chanJSON = kv._2
+
 			val chan = bot.channels.join(
-				(chanJSON \ "name").as[String],
+				kv._1,
 				(chanJSON \ "key").validate[String].getOrElse(null)
 			)
 
@@ -289,9 +296,11 @@ object SavingPlugin extends PluginType[SavingPlugin] {
 			(chanJSON \ "plugins").as[List[String]].flatMap(plugins.get(_)).foreach(chan.enablePlugin(_))
 		})
 
-		(json \ "users").as[Map[String, JsObject]].values.foreach((userJSON) => {
+		(json \ "users").as[Map[String, JsObject]].foreach((kv) => {
+			val userJSON = kv._2
+
 			val user = bot.users.register(
-				(userJSON \ "username").as[String],
+				kv._1,
 				(userJSON \ "password").validate[String].getOrElse(null)
 			)
 

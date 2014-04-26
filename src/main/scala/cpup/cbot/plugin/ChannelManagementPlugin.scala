@@ -3,7 +3,7 @@ package cpup.cbot.plugin
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
 import cpup.cbot.channels.Channel
-import play.api.libs.json.{JsValue, Reads, JsUndefined, Writes}
+import play.api.libs.json.JsValue
 
 object ChannelManagementPlugin extends SingletonPlugin {
 	def name = "channel-management"

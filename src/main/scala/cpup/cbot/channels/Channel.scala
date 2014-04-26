@@ -3,9 +3,7 @@ package cpup.cbot.channels
 import cpup.cbot.{Context, CBot}
 import cpup.cbot.users.User
 import scala.collection.mutable
-import play.api.libs.json.{Writes, Json}
 import cpup.cbot.events.channel.UpdateChannelEvent
-import cpup.cbot.plugin.SavingPlugin
 
 case class Channel(bot: CBot, name: String, key: String) extends Context {
 	def this(bot: CBot, name: String) {

@@ -3,14 +3,13 @@ package cpup.cbot.plugin
 import cpup.cbot.events.{Replyable, MessageEvent, Event}
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
-import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
 import cpup.cbot.events.user.IRCUserEvent
 import play.api.libs.json._
 import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
 import java.io.File
-import cpup.cbot.CBot
+import cpup.cbot.{Context, CBot}
 
-case class CommandPlugin(prefix: String) extends Plugin {
+case class CommandPlugin(var prefix: String) extends Plugin {
 	def pluginType = CommandPlugin
 
 	@Subscribe
@@ -37,17 +36,17 @@ case class CommandPlugin(prefix: String) extends Plugin {
 }
 
 object CommandPlugin extends PluginType[CommandPlugin] {
-	def name = "command"
-	override def format(bot: CBot, pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], file: File) = Some(Format(
-		new Reads[CommandPlugin] {
-			override def reads(json: JsValue) = (json \ "prefix").validate[String].map(CommandPlugin(_))
-		},
-		new Writes[CommandPlugin] {
-			override def writes(pl: CommandPlugin) = Json.obj(
-				"prefix" -> pl.prefix
-			)
-		}
-	))
+	override def name = "command"
+	override def create(context: Context, pluginTypes: Map[String, PluginType[Plugin]]) = new CommandPlugin("!")
+
+	override def reads(bot: CBot, pluginTypes: Map[String, PluginType[Plugin]], file: File) = Some(new Reads[CommandPlugin] {
+		override def reads(json: JsValue) = (json \ "prefix").validate[String].map(CommandPlugin(_))
+	})
+	override def writes(bot: CBot, pluginTypes: Map[String, PluginType[Plugin]]) = Some(new Writes[CommandPlugin] {
+		override def writes(pl: CommandPlugin) = Json.obj(
+			"prefix" -> pl.prefix
+		)
+	})
 
 	trait TCommandCheckEvent extends Event {
 		def command(name: String, handle: (TCommandEvent, () => Unit) => Any) {

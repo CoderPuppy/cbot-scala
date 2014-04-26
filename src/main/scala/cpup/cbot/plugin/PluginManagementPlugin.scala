@@ -2,28 +2,12 @@ package cpup.cbot.plugin
 
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
-import java.io.File
-import cpup.cbot.CBot
+import cpup.cbot.Context
 
-class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extends Plugin {
+class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) extends Plugin {
 	def pluginType = PluginManagementPlugin
 
-	protected var _reversePlugins = plugins.map(_.swap)
-	def reversePlugins = _reversePlugins
-
-	def plugins = _plugins
-
-	def registerPlugin(name: String, plugin: Plugin) = {
-		if(_plugins.contains(name)) {
-
-		} else {
-			_plugins += name -> plugin
-			_reversePlugins += plugin -> name
-		}
-		this
-	}
-
-	def convertToName(pl: Plugin) = _reversePlugins.getOrElse(pl, s"${pl.getClass.getName}@${pl.hashCode}")
+	val reversePluginTypes = pluginTypes.map(_.swap)
 
 	@Subscribe
 	def plugins(e: TCommandCheckEvent) {
@@ -52,9 +36,10 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 								}
 							}
 
-							val enabledPlugins = context.plugins.map(convertToName)
+							val enabledPlugins = context.plugins
+							val availablePlugins = (pluginTypes.values.toSet -- enabledPlugins.map(_.pluginType)).toSet
 							e.reply(s"Enabled Plugins: ${enabledPlugins.mkString(", ")}")
-							e.reply(s"Available Plugins: ${(plugins.keySet -- enabledPlugins).mkString(", ")}")
+							e.reply(s"Available Plugins: ${availablePlugins.map(_.name).mkString(", ")}")
 						}
 
 						case "enable" => {
@@ -79,10 +64,10 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 								}
 
 								for(arg <- pluginsArg.split(",")) {
-									plugins.get(arg) match {
-										case Some(plugin) =>
+									pluginTypes.get(arg) match {
+										case Some(pluginType) =>
 											e.genericReply(s"Enabling plugin: $arg in $context")
-											context.enablePlugin(plugin)
+											context.enablePlugin(pluginType.create(context, pluginTypes))
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")
@@ -114,17 +99,27 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 								}
 
 								val enabledPlugins = context.plugins.map((pl) => {
-									(convertToName(pl), pl)
+									(pl.toString, pl)
 								}).toMap
+
+								def disable(plugin: Plugin) {
+									e.genericReply(s"Disabling plugin: $plugin in $context")
+									context.disablePlugin(plugin)
+								}
 
 								for(arg <- pluginsArg.split(",")) {
 									enabledPlugins.get(arg) match {
 										case Some(plugin) =>
-											e.genericReply(s"Disabling plugin: $arg in $context")
-											context.disablePlugin(plugin)
+											disable(plugin)
 
 										case None =>
-											e.reply(s"Unknown plugin: $arg")
+											pluginTypes.get(arg) match {
+												case Some(pluginType) =>
+													context.plugins.filter(_.pluginType == pluginType).foreach(disable)
+
+												case None =>
+													e.reply(s"Unknown plugin: $arg")
+											}
 									}
 								}
 							}
@@ -141,7 +136,7 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 	}
 }
 
-object PluginManagementPlugin extends PluginType[PluginManagementPlugin] {
+object PluginManagementPlugin extends TransientPluginType {
 	def name = "plugin-management"
-	def format(bot: CBot, pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], file: File) = None
+	def create(context: Context, pluginTypes: Map[String, PluginType[Plugin]]) = new PluginManagementPlugin(pluginTypes)
 }

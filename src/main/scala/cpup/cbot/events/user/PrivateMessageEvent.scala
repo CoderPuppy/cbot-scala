@@ -15,7 +15,7 @@ case class PrivateMessageEvent(bot: CBot, ircUser: IRCUser, msg: String) extends
 		)
 	}
 
-	override def context = ircUser.user
+	override def context = user
 
 	override def reply(msg: String) = ircUser.send.msg(msg)
 	override def genericReply(msg: String) = ircUser.send.msg(msg)
