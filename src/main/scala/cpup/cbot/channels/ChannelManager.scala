@@ -15,10 +15,10 @@ class ChannelManager(val bot: CBot) {
 	protected val channels = new mutable.HashMap[String, (Channel, pircbotx.Channel)]
 	def current = channels.values.map(_._1)
 
-	def join(_name: String) = {
+	def join(_name: String, key: String = null) = {
 		val name = Channel.unifyName(_name)
 		val chan = channels.getOrElseUpdate(name, {
-			val channel = get(_name)
+			val channel = get(_name, key)
 			bot.bus.post(new JoinEvent(bot, channel))
 			(channel, null)
 		})
@@ -45,9 +45,9 @@ class ChannelManager(val bot: CBot) {
 
 	protected val channelCache = new mutable.WeakHashMap[String, Channel]
 
-	def get(_name: String) = {
+	def get(_name: String, key: String = null) = {
 		val name = Channel.unifyName(_name)
-		channelCache.getOrElseUpdate(name, new Channel(bot, name))
+		channelCache.getOrElseUpdate(name, new Channel(bot, name, key))
 	}
 	def apply(name: String) = get(name)
 
