@@ -2,9 +2,14 @@ package cpup.cbot.plugin
 
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
+import java.io.File
+import cpup.cbot.CBot
 
 class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extends Plugin {
-	protected var reversePlugins = plugins.map(_.swap)
+	def pluginType = PluginManagementPlugin
+
+	protected var _reversePlugins = plugins.map(_.swap)
+	def reversePlugins = _reversePlugins
 
 	def plugins = _plugins
 
@@ -13,12 +18,12 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 
 		} else {
 			_plugins += name -> plugin
-			reversePlugins += plugin -> name
+			_reversePlugins += plugin -> name
 		}
 		this
 	}
 
-	def convertToName(pl: Plugin) = reversePlugins.getOrElse(pl, s"${pl.getClass.getName}@${pl.hashCode}")
+	def convertToName(pl: Plugin) = _reversePlugins.getOrElse(pl, s"${pl.getClass.getName}@${pl.hashCode}")
 
 	@Subscribe
 	def plugins(e: TCommandCheckEvent) {
@@ -134,4 +139,9 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 			}
 		)
 	}
+}
+
+object PluginManagementPlugin extends PluginType[PluginManagementPlugin] {
+	def name = "plugin-management"
+	def format(bot: CBot, pluginManagement: PluginManagementPlugin, pluginTypes: Map[String, PluginType[Plugin]], file: File) = None
 }

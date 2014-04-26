@@ -2,6 +2,8 @@ package cpup.cbot.plugin
 
 
 trait Plugin {
+	def pluginType: PluginType[_ <: Plugin]
+
 	protected var _managers = Set[PluginManager]()
 	def managers = _managers
 

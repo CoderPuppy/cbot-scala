@@ -53,15 +53,6 @@ case class User(val bot: CBot,
 	def takePermission(chan: Channel, permission: Symbol): User = takePermission(chan.name, permission)
 }
 
-object UserWrites extends Writes[User] {
-	override def writes(user: User) = Json.obj(
-		"username" -> user.username,
-		"password" -> user.password,
-		"permissions" -> user.permissions.toList.map(_.name),
-		"channelPermissions" -> user.channelPermissions.toMap.map((kv) => (kv._1, kv._2.toList.map(_.name)))
-	)
-}
-
 object User {
 	def hash(password: String) = password
 }

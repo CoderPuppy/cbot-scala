@@ -5,7 +5,9 @@ import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
 import cpup.cbot.CBot
 import cpup.cbot.events.Replyable
 
-class HelpPlugin extends Plugin {
+object HelpPlugin extends SingletonPlugin {
+	def name = "help"
+
 	@Subscribe
 	def help(e: TCommandCheckEvent) {
 		e.command(
@@ -29,9 +31,7 @@ class HelpPlugin extends Plugin {
 			}
 		)
 	}
-}
 
-object HelpPlugin {
 	class HelpQueryEvent(val bot: CBot, val filter: String, val reply: Replyable) extends TCommandCheckEvent {
 		override def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any) {
 			if(name == filter || filter == null) {

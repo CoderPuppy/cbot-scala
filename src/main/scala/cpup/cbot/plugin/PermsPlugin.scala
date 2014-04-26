@@ -3,7 +3,9 @@ package cpup.cbot.plugin
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
 
-class PermsPlugin extends Plugin {
+object PermsPlugin extends SingletonPlugin {
+	def name = "perms"
+
 	@Subscribe
 	def perms(e: TCommandCheckEvent) {
 		e.command(

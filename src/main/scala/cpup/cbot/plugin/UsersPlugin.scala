@@ -4,7 +4,9 @@ import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
 import cpup.cbot.users._
 
-class UsersPlugin extends Plugin {
+object UsersPlugin extends SingletonPlugin {
+	def name = "users"
+
 	@Subscribe
 	def users(e: TCommandCheckEvent) {
 		e.command(
