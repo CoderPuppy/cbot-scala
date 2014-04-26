@@ -27,7 +27,7 @@ class ChannelManagementPlugin extends Plugin {
 								printUsage()
 							} else {
 								for(chan <- e.args(1).split(",")) {
-									if(!e.bot.channels(chan).checkPermission(e.user.user, 'channels)) {
+									if(!e.bot.channels(chan).checkPermission(e.ircUser.user, 'channels)) {
 										e.reply("Insufficient Permissions")
 										return ()
 									}
@@ -42,7 +42,7 @@ class ChannelManagementPlugin extends Plugin {
 									printUsage()
 							} else {
 								for(chan <- e.args(1).split(",")) {
-									if(!e.bot.channels(chan).checkPermission(e.user.user, 'channels)) {
+									if(!e.bot.channels(chan).checkPermission(e.ircUser.user, 'channels)) {
 										e.reply("Insufficient Permissions")
 										return ()
 									}

@@ -68,7 +68,7 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 									pluginsArg = e.args(2)
 								}
 
-								if(!context.checkPermission(e.user.user, 'plugins)) {
+								if(!context.checkPermission(e.ircUser.user, 'plugins)) {
 									e.reply("Insufficient Permissions")
 									return ()
 								}
@@ -103,7 +103,7 @@ class PluginManagementPlugin(protected var _plugins: Map[String, Plugin]) extend
 									pluginsArg = e.args(2)
 								}
 
-								if(!context.checkPermission(e.user.user, 'plugins)) {
+								if(!context.checkPermission(e.ircUser.user, 'plugins)) {
 									e.reply("Insufficient Permissions")
 									return ()
 								}

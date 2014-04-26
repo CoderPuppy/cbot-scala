@@ -1,9 +1,9 @@
 package cpup.cbot.events
 
-import cpup.cbot.users.IRCUser
+import cpup.cbot.users.User
 
 trait UserEvent extends Event {
-	def user: IRCUser
+	def user: User
 
-	def checkPermission(permission: Symbol) = context.checkPermission(user.user, permission)
+	def checkPermission(permission: Symbol) = context.checkPermission(user, permission)
 }

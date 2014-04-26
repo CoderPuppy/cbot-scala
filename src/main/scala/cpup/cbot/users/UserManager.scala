@@ -34,7 +34,9 @@ class UserManager(val bot: CBot) {
 
 	@Subscribe
 	def onNickChange(e: NickChangeEvent) {
-		e.user.nick = e.newNick
+		e.ircUser.nick = e.newNick
+		onlineUsers.remove(e.oldNick)
+		onlineUsers(e.newNick) = e.ircUser
 	}
 }
 

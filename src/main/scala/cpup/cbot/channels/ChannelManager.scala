@@ -81,10 +81,10 @@ class ChannelManager(val bot: CBot) {
 		}
 	}
 
-	@Subscribe
-	def onLeave(e: events.PartEvent[PircBotX]) {
-		channels.remove(Channel.unifyName(e.getChannel.getName))
-	}
+//	@Subscribe
+//	def onLeave(e: events.PartEvent[PircBotX]) {
+//		channels.remove(Channel.unifyName(e.getChannel.getName))
+//	}
 
 	@Subscribe
 	def kicked(e: KickEvent) {
@@ -93,6 +93,7 @@ class ChannelManager(val bot: CBot) {
 				bot.pBot.sendIRC.joinChannel(s"#${e.channel.name}")
 			} else {
 				channels.remove(e.channel.name)
+				bot.bus.post(new LeaveEvent(bot, e.channel))
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import cpup.cbot.{Context, CBot}
 import scala.util.Random
 import scala.collection.mutable
 import cpup.cbot.channels.Channel
+import play.api.libs.json.{Json, Writes}
 
 case class User(val bot: CBot,
 	            var username: String,
@@ -42,6 +43,15 @@ case class User(val bot: CBot,
 
 	def grantPermission(chan: Channel, permission: Symbol): User = grantPermission(chan.name, permission)
 	def takePermission(chan: Channel, permission: Symbol): User = takePermission(chan.name, permission)
+}
+
+object UserWrites extends Writes[User] {
+	override def writes(user: User) = Json.obj(
+		"username" -> user.username,
+		"password" -> user.password,
+		"permissions" -> user.permissions.toList.map(_.name),
+		"channelPermissions" -> user.channelPermissions.toMap.map((kv) => (kv._1, kv._2.toList.map(_.name)))
+	)
 }
 
 object User {

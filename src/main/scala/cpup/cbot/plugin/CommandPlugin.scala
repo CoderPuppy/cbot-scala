@@ -1,6 +1,6 @@
 package cpup.cbot.plugin
 
-import cpup.cbot.events.{Replyable, MessageEvent, UserEvent, Event}
+import cpup.cbot.events.{Replyable, MessageEvent, IRCUserEvent, Event}
 import com.google.common.eventbus.Subscribe
 import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
@@ -9,7 +9,7 @@ case class CommandPlugin(commandSymbol: String) extends Plugin {
 	@Subscribe
 	def commandMessage(e: MessageEvent) {
 		e match {
-			case ev: UserEvent with Replyable if e.msg.startsWith(commandSymbol) =>
+			case ev: IRCUserEvent with Replyable if e.msg.startsWith(commandSymbol) =>
 				val parts = e.msg.substring(commandSymbol.length).split(' ')
 				if(parts.length >= 1) {
 					val event = CommandPlugin.CommandEvent(
@@ -42,7 +42,7 @@ object CommandPlugin {
 		def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any): Unit
 	}
 
-	trait TCommandEvent extends Event with UserEvent with Replyable with TCommandCheckEvent {
+	trait TCommandEvent extends Event with IRCUserEvent with Replyable with TCommandCheckEvent {
 		def cmd: String
 		def args: Seq[String]
 
@@ -58,18 +58,18 @@ object CommandPlugin {
 		}
 	}
 
-	case class CommandEvent[MSG <: MessageEvent with UserEvent with Replyable](msgEvent: MSG, cmd: String, args: Seq[String]) extends TCommandEvent {
+	case class CommandEvent[MSG <: MessageEvent with IRCUserEvent with Replyable](msgEvent: MSG, cmd: String, args: Seq[String]) extends TCommandEvent {
 		override def bot = msgEvent.bot
-		override def user = msgEvent.user
+		override def ircUser = msgEvent.ircUser
 		override def reply(msg: String) { msgEvent.reply(msg) }
 		override def genericReply(msg: String) { msgEvent.genericReply(msg) }
 		override def privateReply(msg: String) { msgEvent.privateReply(msg) }
 		override def context = msgEvent.context
 	}
 
-	case class ChannelCommandEvent[MSG <: MessageEvent with UserEvent with Replyable with ChannelEvent](commandEvent: CommandEvent[_ <: MessageEvent with UserEvent with Replyable], msgEvent: MSG) extends TCommandEvent with ChannelEvent {
+	case class ChannelCommandEvent[MSG <: MessageEvent with IRCUserEvent with Replyable with ChannelEvent](commandEvent: CommandEvent[_ <: MessageEvent with IRCUserEvent with Replyable], msgEvent: MSG) extends TCommandEvent with ChannelEvent {
 		override def bot = commandEvent.bot
-		override def user = commandEvent.user
+		override def ircUser = commandEvent.ircUser
 		override def reply(msg: String) { commandEvent.reply(msg) }
 		override def genericReply(msg: String) { commandEvent.genericReply(msg) }
 		override def privateReply(msg: String) { commandEvent.privateReply(msg) }

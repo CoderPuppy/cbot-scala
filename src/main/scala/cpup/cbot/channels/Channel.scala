@@ -3,6 +3,7 @@ package cpup.cbot.channels
 import cpup.cbot.{Context, CBot}
 import cpup.cbot.users.User
 import scala.collection.mutable
+import play.api.libs.json.{Writes, Json}
 
 case class Channel(bot: CBot, name: String, key: String) extends Context {
 	def this(bot: CBot, name: String) {
@@ -30,6 +31,14 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 		user.channelPermissions.removeBinding(name, permission)
 		this
 	}
+}
+
+object ChannelWrites extends Writes[Channel] {
+	def writes(chan: Channel) = Json.obj(
+		"name" -> chan.name,
+		"key" -> chan.key,
+		"rejoin" -> chan.rejoin
+	)
 }
 
 object Channel {

@@ -5,15 +5,15 @@ import cpup.cbot.users.IRCUser
 import cpup.cbot.channels.Channel
 import org.pircbotx.hooks.events
 import org.pircbotx.PircBotX
-import cpup.cbot.events.{Replyable, MessageEvent, UserEvent, Event}
+import cpup.cbot.events.{Replyable, MessageEvent, IRCUserEvent, Event}
 
-case class ChannelMessageEvent(bot: CBot, channel: Channel, user: IRCUser, msg: String) extends Event with ChannelEvent with UserEvent with MessageEvent with Replyable {
+case class ChannelMessageEvent(bot: CBot, channel: Channel, ircUser: IRCUser, msg: String) extends Event with ChannelEvent with IRCUserEvent with MessageEvent with Replyable {
 	def this(bot: CBot, e: events.MessageEvent[PircBotX]) {
 		this(bot, bot.channels(e.getChannel.getName), bot.users.fromNick(e.getUser.getNick), e.getMessage)
 	}
 
 	override def reply(msg: String) {
-		channel.send.msg(s"${user.nick}: $msg")
+		channel.send.msg(s"${ircUser.nick}: $msg")
 	}
 
 	override def genericReply(msg: String) {
@@ -21,6 +21,6 @@ case class ChannelMessageEvent(bot: CBot, channel: Channel, user: IRCUser, msg: 
 	}
 
 	override def privateReply(msg: String) {
-		user.send.msg(msg)
+		ircUser.send.msg(msg)
 	}
 }

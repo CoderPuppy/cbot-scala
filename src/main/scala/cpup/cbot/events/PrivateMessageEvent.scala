@@ -5,7 +5,7 @@ import cpup.cbot.users.IRCUser
 import org.pircbotx.hooks.events
 import org.pircbotx.PircBotX
 
-case class PrivateMessageEvent(bot: CBot, user: IRCUser, msg: String) extends Event with UserEvent with MessageEvent with Replyable {
+case class PrivateMessageEvent(bot: CBot, ircUser: IRCUser, msg: String) extends Event with IRCUserEvent with MessageEvent with Replyable {
 	def this(bot: CBot, e: events.PrivateMessageEvent[PircBotX]) {
 		this(
 			bot,
@@ -14,9 +14,9 @@ case class PrivateMessageEvent(bot: CBot, user: IRCUser, msg: String) extends Ev
 		)
 	}
 
-	override def context = user.user
+	override def context = ircUser.user
 
-	override def reply(msg: String) = user.send.msg(msg)
-	override def genericReply(msg: String) = user.send.msg(msg)
-	override def privateReply(msg: String) = user.send.msg(msg)
+	override def reply(msg: String) = ircUser.send.msg(msg)
+	override def genericReply(msg: String) = ircUser.send.msg(msg)
+	override def privateReply(msg: String) = ircUser.send.msg(msg)
 }
