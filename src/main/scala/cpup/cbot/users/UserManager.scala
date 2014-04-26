@@ -3,7 +3,11 @@ package cpup.cbot.users
 import cpup.cbot.CBot
 import scala.collection.mutable
 import com.google.common.eventbus.Subscribe
-import cpup.cbot.events.user.{RegisterNickServEvent, NickChangeEvent, RegisterEvent}
+import cpup.cbot.events.user._
+import cpup.cbot.events.user.RegisterEvent
+import cpup.cbot.events.user.RegisterNickServEvent
+import cpup.cbot.events.user.NickChangeEvent
+import cpup.cbot.events.user.UnregisterEvent
 
 class UserManager(val bot: CBot) {
 	bot.bus.register(this)
@@ -35,6 +39,17 @@ class UserManager(val bot: CBot) {
 		user
 	}
 
+	def unregister(user: User) = {
+		if(user.isInstanceOf[GuestUser]) {
+			throw new GuestUserException("Cannot unregister GuestUsers")
+		}
+
+		registeredUsers.remove(user.username)
+		bot.bus.post(new UnregisterEvent(bot, user))
+
+		this
+	}
+
 	def registerNickServ(nickserv: String, user: User) = {
 		if(user == null) {
 			throw new NullPointerException("No user")
@@ -50,6 +65,13 @@ class UserManager(val bot: CBot) {
 
 		bot.bus.post(new RegisterNickServEvent(bot, user, nickserv))
 		nickServUsers(nickserv) = user
+
+		this
+	}
+
+	def unregisterNickServ(nickserv: String) = {
+		val user = nickServUsers.remove(nickserv).getOrElse(null)
+		bot.bus.post(new UnregisterNickServEvent(bot, user, nickserv))
 
 		this
 	}

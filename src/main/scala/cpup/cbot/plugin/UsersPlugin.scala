@@ -4,9 +4,6 @@ import com.google.common.eventbus.Subscribe
 import cpup.cbot.plugin.CommandPlugin.{TCommandEvent, TCommandCheckEvent}
 import cpup.cbot.users._
 
-/**
- * Created by cpup on 4/25/14.
- */
 class UsersPlugin extends Plugin {
 	@Subscribe
 	def users(e: TCommandCheckEvent) {
@@ -18,7 +15,9 @@ class UsersPlugin extends Plugin {
 				"logout",
 				"setpass[word] <new password>",
 				"register <nick> <username>",
-				"register-nickserv"
+				"unregister",
+				"register-nickserv",
+				"unregister-nickserv"
 			),
 			handle = (e: TCommandEvent, printUsage: () => Unit) => {
 				if(e.args.length < 1) {
@@ -87,6 +86,10 @@ class UsersPlugin extends Plugin {
 								}
 							}
 
+						case "unregister" =>
+							e.bot.users.unregister(e.user)
+							e.reply(s"Unregistered @${e.user}")
+
 						case "register-nickserv" =>
 							try {
 								e.ircUser.registerNickServ
@@ -98,6 +101,10 @@ class UsersPlugin extends Plugin {
 								case ex: AlreadyRegisteredException =>
 									e.reply("Your NickServ account is already registered to a user")
 							}
+
+						case "unregister-nickserv" =>
+							e.ircUser.unregisterNickServ
+							e.reply(s"Unregistered NickServ account: ${e.ircUser.nickserv}")
 
 						case _ =>
 							printUsage()

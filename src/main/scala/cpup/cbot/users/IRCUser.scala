@@ -60,6 +60,11 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 		bot.users.registerNickServ(nickserv, user)
 	}
 
+	def unregisterNickServ {
+		updateWhoIs
+		bot.users.unregisterNickServ(nickserv)
+	}
+
 	val send = IRCUserSend(this)
 }
 

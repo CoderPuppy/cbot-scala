@@ -1,8 +1,22 @@
 package cpup.cbot.plugin
 
-/**
- * Created by cpup on 4/25/14.
- */
+import cpup.cbot.CBot
+import java.io.{PrintWriter, File}
+import play.api.libs.json.{JsObject, Json, JsValue}
+import scala.io.Source
+import cpup.cbot.channels.{Channel, ChannelWrites}
+import cpup.cbot.users.{AlreadyRegisteredException, User, UserWrites}
+import com.google.common.eventbus.Subscribe
+import cpup.cbot.events.channel.{ChannelUpdateEvent, LeaveEvent, JoinEvent}
+import cpup.cbot.events.user._
+import cpup.cbot.events.user.UnregisterNickServEvent
+import cpup.cbot.events.user.RegisterEvent
+import cpup.cbot.events.channel.JoinEvent
+import cpup.cbot.events.user.RegisterNickServEvent
+import play.api.libs.json.JsObject
+import cpup.cbot.events.channel.ChannelUpdateEvent
+import cpup.cbot.events.channel.LeaveEvent
+
 object SavingPlugin {
 	def load(bot: CBot, file: File) {
 		val json: JsValue = Json.parse({
@@ -129,15 +143,20 @@ class SavingPlugin(val file: File) extends Plugin {
 	}
 
 	@Subscribe
+	def unregisterNickServ(e: UnregisterNickServEvent) {
+		nickServUsers -= e.nickserv
+		save
+	}
+
+	@Subscribe
 	def register(e: RegisterEvent) {
 		updateUser(e.user)
 		save
 	}
 
-	// TODO: use this if unregistering is implemented
-//	@Subscribe
-//	def unregister(e: UnregisterEvent) {
-//		users -= e.user.username
-//		save
-//	}
+	@Subscribe
+	def unregister(e: UnregisterEvent) {
+		users -= e.user.username
+		save
+	}
 }
