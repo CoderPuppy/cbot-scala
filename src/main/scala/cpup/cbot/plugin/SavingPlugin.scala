@@ -250,10 +250,18 @@ object SavingPlugin extends PluginType[SavingPlugin] {
 			override def reads(json: JsValue) = {
 				(json \ "type")
 					.validate[String]
-					.map(pluginTypes.getOrElse(_, null))
-					.filter(ValidationError("Unknown PluginType"))(_ != null)
-					.map(_.format(bot, pluginManagement, pluginTypes, file).getOrElse(null))
-					.filter(ValidationError("Unloadable"))(_ != null)
+					.flatMap((typeStr) => {
+						pluginTypes.get(typeStr) match {
+							case Some(pluginType) => JsSuccess(pluginType)
+							case _ => JsError(ValidationError("Unknown PluginType", typeStr))
+						}
+					})
+					.flatMap((pluginType) => {
+						pluginType.format(bot, pluginManagement, pluginTypes, file) match {
+							case Some(format) => JsSuccess(format)
+							case _ => JsError(ValidationError("Unloadable", pluginType.name))
+						}
+					})
 					.flatMap((format) => {
 						(json \ "data").validate(format)
 					})
