@@ -8,7 +8,8 @@ ext {
 			compile: [
 				'cpup.lib:cpup-lib:dev',
 				'org.pircbotx:pircbotx:2.0.1',
-                'org.slf4j:slf4j-simple:1.7.6'
+                'org.slf4j:slf4j-simple:1.7.6',
+				'com.typesafe.play:play-json_2.10:2.2.2'
 			]
 		]
 	]
@@ -19,6 +20,9 @@ apply plugin: 'java'
 repositories {
 	mavenCentral()
 	mavenLocal()
+	maven {
+		url "http://repo.typesafe.com/typesafe/releases"
+	}
 }
 
 info.dependencies.each { type, deps ->
