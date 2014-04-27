@@ -1,7 +1,9 @@
 package cpup.cbot.plugin
 
 import scala.util.Random
-import cpup.cbot.Context
+import cpup.cbot.{CBot, Context}
+import cpup.cbot.events.Replyable
+import cpup.cbot.events.plugin.SetConfigOptionEvent
 
 
 trait Plugin {
@@ -12,6 +14,29 @@ trait Plugin {
 	}).mkString("")
 
 	override def toString = s"${pluginType.name}@$id"
+
+	def configOptions: Set[ConfigOption] = Set()
+	def setConfigOption(bot: CBot, reply: Replyable, key: String, value: String) = {
+		configOptions.find(_.name == key) match {
+			case Some(configOption) =>
+				configOption.set(reply, value)
+				bot.bus.post(new SetConfigOptionEvent(bot, this, reply, key, value))
+
+			case None =>
+				throw new UnknownConfigOptionException(s"Unknown Config Option: $key")
+		}
+
+		this
+	}
+	def getConfigOption(key: String) = {
+		configOptions.find(_.name == key) match {
+			case Some(configOption) =>
+				configOption.get
+
+			case None =>
+				throw new UnknownConfigOptionException(s"Unknown Config Option: $key")
+		}
+	}
 
 	protected var _managers = Set[Context]()
 	def managers = _managers
@@ -26,3 +51,5 @@ trait Plugin {
 		manager.bus.unregister(this)
 	}
 }
+
+class UnknownConfigOptionException(msg: String) extends Exception(msg)

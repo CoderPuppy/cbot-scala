@@ -16,7 +16,7 @@ import cpup.cbot.events.user.RegisterNickServEvent
 import play.api.libs.json.JsObject
 import cpup.cbot.events.channel.UpdateChannelEvent
 import cpup.cbot.events.channel.LeaveEvent
-import cpup.cbot.events.plugin.{DisablePluginEvent, EnablePluginEvent}
+import cpup.cbot.events.plugin.{UpdatePluginEvent, DisablePluginEvent, EnablePluginEvent}
 import play.api.data.validation.ValidationError
 
 class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _file: File) extends Plugin {
@@ -57,7 +57,6 @@ class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _
 	}
 
 	def save {
-		println("saving")
 		val json = Json.prettyPrint(Json.obj(
 			"channels" -> channels,
 			"users" -> users,
@@ -166,12 +165,12 @@ class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _
 	// -- Plugins -- \\
 	def updatePlugin(pl: Plugin): String = {
 		val name = pl.toString
-		val inst = (pluginInsts \ name).validate[JsObject].getOrElse(Json.obj(
+		val inst = Json.obj(
 //			"name" -> name,
 			"type" -> pl.pluginType.name,
 			"id" -> pl.id,
 			"data" -> Json.toJson(pl)(pl.pluginType.writes(bot, pluginTypes).get.asInstanceOf[Writes[Plugin]])
-		))
+		)
 		pluginInsts -= name
 		pluginInsts += (name -> inst)
 		name
@@ -227,6 +226,14 @@ class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _
 
 				case _ =>
 			}
+			save
+		}
+	}
+
+	@Subscribe
+	def updatePlugin(e: UpdatePluginEvent) {
+		if(e.plugin.pluginType.writes(bot, pluginTypes).isDefined) {
+			updatePlugin(e.plugin)
 			save
 		}
 	}

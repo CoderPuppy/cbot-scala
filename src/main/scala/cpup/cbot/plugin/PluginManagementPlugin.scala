@@ -16,7 +16,10 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 			usages = List(
 				"list [context]",
 				"enable [context] <plugin>",
-				"disable [context] <plugin>"
+				"disable [context] <plugin>",
+				"listoptions [context] <plugin>",
+				"get [context] <plugin> <key>",
+				"set [context] <plugin> <key> <value>"
 			),
 			handle = (e: TCommandEvent, printUsage: () => Unit) => {
 				if(e.args.length < 1) {
@@ -124,6 +127,106 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								}
 							}
 						}
+
+						case "listoptions" =>
+							val (context, pluginName) = if(e.args.length >= 3) {
+								(
+									e.bot.getContext(e.args(1)),
+									e.args(2)
+								)
+							} else {
+								(
+									e.context,
+									e.args(1)
+								)
+							}
+
+							(context.plugins.find(_.toString == pluginName) match {
+								case None => context.plugins.find(_.pluginType.name == pluginName)
+								case Some(plugin) => Some(plugin)
+							}) match {
+								case Some(plugin) =>
+									e.genericReply(s" -- Options for $plugin")
+									plugin.configOptions.foreach((configOption) => {
+										e.genericReply(s" - ${configOption.name} :: ${configOption.usage}")
+									})
+
+								case None =>
+									e.reply(s"Unknown Plugin: $pluginName")
+							}
+
+						case "get" =>
+							if(e.args.length < 3) {
+								printUsage()
+							} else {
+								val (context, pluginName, key) = if(e.args.length >= 4) {
+									(
+										e.bot.getContext(e.args(1)),
+										e.args(2),
+										e.args(3)
+									)
+								} else {
+									(
+										e.context,
+										e.args(1),
+										e.args(2)
+									)
+								}
+
+								(context.plugins.find(_.toString == pluginName) match {
+									case None => context.plugins.find(_.pluginType.name == pluginName)
+									case Some(plugin) => Some(plugin)
+								}) match {
+									case Some(plugin) =>
+										try {
+											e.genericReply(s"$plugin $key=${plugin.getConfigOption(key)}")
+										} catch {
+											case ex: UnknownConfigOptionException =>
+												e.reply(s"Unknown Option: $key for $plugin")
+										}
+
+									case None =>
+										e.reply(s"Unknown Plugin: $pluginName")
+								}
+							}
+
+						case "set" =>
+							if(e.args.length < 4) {
+								printUsage()
+							} else {
+								val (context, pluginName, key, value) = if(e.args.length >= 5) {
+									(
+										e.bot.getContext(e.args(1)),
+										e.args(2),
+										e.args(3),
+										e.args(4)
+									)
+								} else {
+									(
+										e.context,
+										e.args(1),
+										e.args(2),
+										e.args(3)
+									)
+								}
+
+								(context.plugins.find(_.toString == pluginName) match {
+									case None => context.plugins.find(_.pluginType.name == pluginName)
+									case Some(plugin) => Some(plugin)
+								}) match {
+									case Some(plugin) =>
+										try {
+											plugin.setConfigOption(e.bot, e, key, value)
+											e.genericReply(s"Set $plugin $key to $value")
+										} catch {
+											case ex: UnknownConfigOptionException =>
+												e.reply(s"Unknown Option: $key for $plugin")
+										}
+
+									case None =>
+										e.reply(s"Unknown Plugin: $pluginName")
+								}
+							}
 
 						case _ =>
 							printUsage()

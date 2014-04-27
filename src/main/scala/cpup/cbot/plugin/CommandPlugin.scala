@@ -12,6 +12,22 @@ import cpup.cbot.{Context, CBot}
 case class CommandPlugin(var prefix: String) extends Plugin {
 	def pluginType = CommandPlugin
 
+	override def configOptions = Set(
+		new ConfigOption {
+			override def name = "prefix"
+			override def usage = "Prefix used for commands"
+
+			override def get = prefix
+			override def set(reply: Replyable, newVal: String) {
+				if(newVal.length > 0) {
+					prefix = newVal
+				} else {
+					reply.reply(s"$name must not be empty")
+				}
+			}
+		}
+	)
+
 	@Subscribe
 	def commandMessage(e: MessageEvent) {
 		e match {
