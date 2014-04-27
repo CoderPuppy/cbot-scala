@@ -2,10 +2,8 @@ package cpup.cbot.plugin
 
 import cpup.cbot.events.{Replyable, MessageEvent, Event}
 import com.google.common.eventbus.Subscribe
-import cpup.cbot.events.channel.ChannelEvent
 import cpup.cbot.events.user.IRCUserEvent
 import play.api.libs.json._
-import cpup.cbot.plugin.CommandPlugin.ChannelCommandEvent
 import java.io.File
 import cpup.cbot.{Context, CBot}
 
@@ -37,15 +35,9 @@ case class CommandPlugin(var prefix: String) extends Plugin {
 					val event = CommandPlugin.CommandEvent(
 						ev,
 						parts(0),
-						parts.slice(1, parts.length + 1)
+						parts.view(1, parts.length)
 					)
-					ev match {
-						case ev: ChannelEvent =>
-							e.bot.bus.post(new ChannelCommandEvent(event, ev))
-
-						case _ =>
-							e.bot.bus.post(event)
-					}
+					e.bot.bus.post(event)
 				}
 			case _ =>
 		}
@@ -78,6 +70,10 @@ object CommandPlugin extends PluginType[CommandPlugin] {
 	}
 
 	trait TCommandEvent extends Event with IRCUserEvent with Replyable with TCommandCheckEvent {
+		if(context.output.isEmpty) {
+			throw new NoSuchMethodException("Cannot output to context")
+		}
+
 		def cmd: String
 		def args: Seq[String]
 
@@ -100,17 +96,5 @@ object CommandPlugin extends PluginType[CommandPlugin] {
 		override def genericReply(msg: String) { msgEvent.genericReply(msg) }
 		override def privateReply(msg: String) { msgEvent.privateReply(msg) }
 		override def context = msgEvent.context
-	}
-
-	case class ChannelCommandEvent[MSG <: MessageEvent with IRCUserEvent with Replyable with ChannelEvent](commandEvent: CommandEvent[_ <: MessageEvent with IRCUserEvent with Replyable], msgEvent: MSG) extends TCommandEvent with ChannelEvent {
-		override def bot = commandEvent.bot
-		override def ircUser = commandEvent.ircUser
-		override def reply(msg: String) { commandEvent.reply(msg) }
-		override def genericReply(msg: String) { commandEvent.genericReply(msg) }
-		override def privateReply(msg: String) { commandEvent.privateReply(msg) }
-		override def channel = msgEvent.channel
-		override def cmd = commandEvent.cmd
-		override def args = commandEvent.args
-		override def context = commandEvent.context
 	}
 }

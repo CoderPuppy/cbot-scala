@@ -8,7 +8,7 @@ import org.pircbotx.PircBotX
 import cpup.cbot.channels.Channel
 import cpup.cbot.events.user.IRCUserEvent
 
-case class KickEvent(val bot: CBot, val channel: Channel, val ircUser: IRCUser, val kicked: IRCUser, val reason: String) extends Event with ChannelEvent with IRCUserEvent with MessageEvent {
+case class KickEvent(val bot: CBot, val channel: Channel, val ircUser: IRCUser, val kicked: IRCUser, val reason: String) extends Event with IRCUserEvent with MessageEvent {
 	def msg = reason
 	def this(bot: CBot, e: events.KickEvent[PircBotX]) {
 		this(

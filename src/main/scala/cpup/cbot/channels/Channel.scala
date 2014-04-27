@@ -1,6 +1,6 @@
 package cpup.cbot.channels
 
-import cpup.cbot.{Context, CBot}
+import cpup.cbot.{MessageOutput, Context, CBot}
 import cpup.cbot.users.User
 import scala.collection.mutable
 import cpup.cbot.events.channel.UpdateChannelEvent
@@ -23,7 +23,8 @@ case class Channel(bot: CBot, protected val _name: String, key: String) extends 
 		this
 	}
 
-	val send = new ChannelSend(this)
+	val send = new ChannelOutput(this)
+	def output = Some(send)
 
 	override def getPermissions(user: User) = {
 		bot.getPermissions(user) ++ user.channelPermissions.getOrElseUpdate(name, new mutable.HashSet[Symbol]())
@@ -42,7 +43,7 @@ object Channel {
 	} else { name }).toLowerCase(Locale.US)
 }
 
-case class ChannelSend(chan: Channel) {
+case class ChannelOutput(chan: Channel) extends MessageOutput[ChannelOutput] {
 	def msg(msg: String) = {
 		chan.bot.pBot.sendIRC.message(s"#${chan.name}", msg)
 		this

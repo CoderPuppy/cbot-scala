@@ -1,6 +1,6 @@
 package cpup.cbot.users
 
-import cpup.cbot.{Context, CBot}
+import cpup.cbot.{MessageOutput, Context, CBot}
 import scala.util.Random
 import scala.collection.mutable
 import cpup.cbot.channels.Channel
@@ -19,7 +19,7 @@ case class User(val bot: CBot,
 		newVal
 	}
 
-	var users = Set[IRCUser]()
+	var ircUsers = Set[IRCUser]()
 
 	val permissions = new mutable.HashSet[Symbol]()
 	val channelPermissions = new mutable.HashMap[String, mutable.Set[Symbol]]() with mutable.MultiMap[String, Symbol]
@@ -51,10 +51,20 @@ case class User(val bot: CBot,
 
 	def grantPermission(chan: Channel, permission: Symbol): User = grantPermission(chan.name, permission)
 	def takePermission(chan: Channel, permission: Symbol): User = takePermission(chan.name, permission)
+
+	val send = new UserOutput(this)
+	override def output = Some(send)
 }
 
 object User {
 	def hash(password: String) = password
+}
+
+case class UserOutput(user: User) extends MessageOutput[UserOutput] {
+	def msg(msg: String) = {
+		user.ircUsers.foreach(_.send.msg(msg))
+		this
+	}
 }
 
 class GuestUser(ircUser: IRCUser) extends User(ircUser.bot, s"guest_${ircUser.nick}_${Random.nextInt(100)}", null) {

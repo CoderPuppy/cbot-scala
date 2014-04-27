@@ -57,7 +57,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 									pluginsArg = e.args(2)
 								}
 
-								if(!context.checkPermission(e.ircUser.user, 'plugins)) {
+								if(!context.checkPermission(e.user, 'plugins)) {
 									e.reply("Insufficient Permissions")
 									return ()
 								}
@@ -121,7 +121,12 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 										case None =>
 											pluginTypes.get(arg) match {
 												case Some(pluginType) =>
-													context.plugins.filter(_.pluginType == pluginType).foreach(disable)
+													val matching = context.plugins.filter(_.pluginType == pluginType)
+													matching.foreach(disable)
+
+													if(matching.isEmpty) {
+														e.reply(s"No plugins of type: ${pluginType.name} in $context")
+													}
 
 												case None =>
 													e.reply(s"Unknown plugin: $arg")
@@ -151,7 +156,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								case Some(plugin) =>
 									e.genericReply(s" -- Options for $plugin")
 									plugin.configOptions.foreach((configOption) => {
-										e.genericReply(s"  - ${configOption.name} :: ${configOption.usage}")
+										e.genericReply(s"  - ${configOption.name} :: ${configOption.usage} = ${configOption.get}")
 									})
 
 								case None =>

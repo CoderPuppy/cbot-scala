@@ -11,7 +11,26 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 	var username: String = null
 
 	val guestUser = new GuestUser(this)
-	var user: User = guestUser
+	protected var _user: User = null
+
+	def user = _user
+	def user_=(newVal: User) = {
+		if(_user != null) {
+			_user.ircUsers -= this
+		}
+
+		if(newVal == null) {
+			_user = guestUser
+		} else {
+			_user = newVal
+		}
+
+		_user.ircUsers += this
+
+		newVal
+	}
+
+	user = guestUser
 
 	def this(bot: CBot, nick: String) { this(bot, nick, null) }
 
@@ -64,10 +83,10 @@ class IRCUser(val bot: CBot, var nick: String, var nickserv: String) {
 		bot.users.unregisterNickServ(nickserv)
 	}
 
-	val send = IRCUserSend(this)
+	val send = IRCUserOutput(this)
 }
 
-case class IRCUserSend(user: IRCUser) {
+case class IRCUserOutput(user: IRCUser) {
 	def msg(msg: String) {
 		user.bot.pBot.sendIRC.message(user.nick, msg)
 	}

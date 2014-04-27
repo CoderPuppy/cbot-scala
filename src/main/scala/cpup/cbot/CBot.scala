@@ -36,6 +36,8 @@ class CBot(val config: BotConfig) extends Listener[PircBotX] with Context {
 		pBot.startBot
 	}
 
+	def output = None
+
 	def getContext(name: String) = if(name == "@") {
 		this
 	} else if(name.startsWith("@")) {
