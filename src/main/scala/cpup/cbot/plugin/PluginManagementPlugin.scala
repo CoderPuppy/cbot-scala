@@ -219,7 +219,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								}) match {
 									case Some(plugin) =>
 										if(!(
-											e.context.checkPermission(e.user, 'plugins1) ||
+											e.context.checkPermission(e.user, 'plugins) ||
 											e.context.checkPermission(e.user, 'pluginsConfig) ||
 											e.context.checkPermission(e.user, Symbol(s"pluginsConfig:${plugin.pluginType.name}"))
 										)) {
