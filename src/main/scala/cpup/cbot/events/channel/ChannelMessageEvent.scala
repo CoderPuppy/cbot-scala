@@ -10,7 +10,12 @@ import cpup.cbot.events.user.IRCUserEvent
 
 case class ChannelMessageEvent(bot: CBot, channel: Channel, ircUser: IRCUser, msg: String) extends Event with ChannelEvent with IRCUserEvent with MessageEvent with Replyable {
 	def this(bot: CBot, e: events.MessageEvent[PircBotX]) {
-		this(bot, bot.channels(e.getChannel.getName), bot.users.fromNick(e.getUser.getNick), e.getMessage)
+		this(
+			bot,
+			bot.channels(e.getChannel.getName),
+			bot.users.fromNick(e.getUser.getNick),
+			e.getMessage
+		)
 	}
 
 	override def context = channel

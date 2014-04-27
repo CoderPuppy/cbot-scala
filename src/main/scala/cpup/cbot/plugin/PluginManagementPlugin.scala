@@ -41,7 +41,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 
 							val enabledPlugins = context.plugins
 							val availablePlugins = (pluginTypes.values.toSet -- enabledPlugins.map(_.pluginType)).toSet
-							e.reply(s"Enabled Plugins: ${enabledPlugins.mkString(", ")}")
+							e.reply(s"Enabled Plugins in $context: ${enabledPlugins.mkString(", ")}")
 							e.reply(s"Available Plugins: ${availablePlugins.map(_.name).mkString(", ")}")
 						}
 
@@ -53,11 +53,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								var pluginsArg = e.args(1)
 
 								if(e.args.length >= 3) {
-									if(e.args(1) == "@") {
-										context = e.bot
-									} else {
-										context = e.bot.channels(e.args(1))
-									}
+									context = e.bot.getContext(e.args(1))
 									pluginsArg = e.args(2)
 								}
 
@@ -69,8 +65,15 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								for(arg <- pluginsArg.split(",")) {
 									pluginTypes.get(arg) match {
 										case Some(pluginType) =>
-											e.genericReply(s"Enabling plugin: $arg in $context")
-											context.enablePlugin(pluginType.create(context, pluginTypes))
+											context.plugins.find(_.pluginType == pluginType) match {
+												case Some(plugin) =>
+													e.genericReply(s"${pluginType.name} is already enabled in $context")
+
+												case None =>
+													val plugin = pluginType.create(context, pluginTypes)
+													e.genericReply(s"Enabling plugin: $plugin in $context")
+													context.enablePlugin(plugin)
+											}
 
 										case None =>
 											e.reply(s"Unknown plugin: $arg")

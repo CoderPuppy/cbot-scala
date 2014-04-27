@@ -42,6 +42,7 @@ case class CommandPlugin(var prefix: String) extends Plugin {
 					ev match {
 						case ev: ChannelEvent =>
 							e.bot.bus.post(new ChannelCommandEvent(event, ev))
+
 						case _ =>
 							e.bot.bus.post(event)
 					}

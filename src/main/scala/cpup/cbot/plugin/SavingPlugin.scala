@@ -300,7 +300,11 @@ object SavingPlugin extends PluginType[SavingPlugin] {
 
 			chan.setRejoin((chanJSON \ "rejoin").as[Boolean])
 
-			(chanJSON \ "plugins").as[List[String]].flatMap(plugins.get(_)).foreach(chan.enablePlugin(_))
+			(chanJSON \ "plugins").as[List[String]].flatMap((name) => {
+				plugins.get(name)
+			}).foreach((pl) => {
+				chan.enablePlugin(pl)
+			})
 		})
 
 		(json \ "users").as[Map[String, JsObject]].foreach((kv) => {

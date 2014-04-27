@@ -4,8 +4,11 @@ import cpup.cbot.{Context, CBot}
 import cpup.cbot.users.User
 import scala.collection.mutable
 import cpup.cbot.events.channel.UpdateChannelEvent
+import java.util.Locale
 
-case class Channel(bot: CBot, name: String, key: String) extends Context {
+case class Channel(bot: CBot, protected val _name: String, key: String) extends Context {
+	val name = Channel.unifyName(_name)
+
 	def this(bot: CBot, name: String) {
 		this(bot, name, null)
 	}
@@ -34,9 +37,9 @@ case class Channel(bot: CBot, name: String, key: String) extends Context {
 }
 
 object Channel {
-	def unifyName(name: String) = if(name.charAt(0) == '#') {
+	def unifyName(name: String) = (if(name.startsWith("#")) {
 		name.substring(1)
-	} else { name }.toLowerCase
+	} else { name }).toLowerCase(Locale.US)
 }
 
 case class ChannelSend(chan: Channel) {
