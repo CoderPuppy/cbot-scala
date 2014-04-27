@@ -148,7 +148,7 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 								case Some(plugin) =>
 									e.genericReply(s" -- Options for $plugin")
 									plugin.configOptions.foreach((configOption) => {
-										e.genericReply(s" - ${configOption.name} :: ${configOption.usage}")
+										e.genericReply(s"  - ${configOption.name} :: ${configOption.usage}")
 									})
 
 								case None =>
@@ -215,6 +215,15 @@ class PluginManagementPlugin(val pluginTypes: Map[String, PluginType[Plugin]]) e
 									case Some(plugin) => Some(plugin)
 								}) match {
 									case Some(plugin) =>
+										if(!(
+											e.context.checkPermission(e.user, 'plugins1) ||
+											e.context.checkPermission(e.user, 'pluginsConfig) ||
+											e.context.checkPermission(e.user, Symbol(s"pluginsConfig:${plugin.pluginType.name}"))
+										)) {
+											e.reply("Insufficient Permissions")
+											return ()
+										}
+
 										try {
 											plugin.setConfigOption(e.bot, e, key, value)
 											e.genericReply(s"Set $plugin $key to $value")
