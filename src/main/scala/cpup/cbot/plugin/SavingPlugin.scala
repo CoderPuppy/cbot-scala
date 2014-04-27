@@ -51,7 +51,9 @@ class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _
 //			"username" -> user.username,
 			"password" -> user.password,
 			"permissions" -> user.permissions.toList.map(_.name),
-			"channelPermissions" -> user.channelPermissions.toMap.map((kv) => (kv._1, kv._2.toList.map(_.name))),
+			"channelPermissions" -> user.channelPermissions.toMap.map((kv) => {
+				(kv._1, kv._2.toList.map(_.name))
+			}).filter(!_._2.isEmpty),
 			"plugins" -> getPluginsForSaving(user)
 		)
 	}
