@@ -1,4 +1,4 @@
-package cpup.cbot.plugin
+package cpup.cbot.plugin.commandPlugin
 
 import cpup.cbot.events.{Replyable, MessageEvent, Event}
 import com.google.common.eventbus.Subscribe
@@ -6,6 +6,8 @@ import cpup.cbot.events.user.IRCUserEvent
 import play.api.libs.json._
 import java.io.File
 import cpup.cbot.{Context, CBot}
+import scala.collection.mutable
+import cpup.cbot.plugin.{PluginType, ConfigOption, Plugin}
 
 case class CommandPlugin(var prefix: String) extends Plugin {
 	def pluginType = CommandPlugin
@@ -35,7 +37,7 @@ case class CommandPlugin(var prefix: String) extends Plugin {
 					val event = CommandPlugin.CommandEvent(
 						ev,
 						parts(0),
-						parts.view(1, parts.length)
+						Arguments.parse(parts.view(1, parts.length))
 					)
 					e.bot.bus.post(event)
 				}
@@ -58,15 +60,17 @@ object CommandPlugin extends PluginType[CommandPlugin] {
 	})
 
 	trait TCommandCheckEvent extends Event {
-		def command(name: String, handle: (TCommandEvent, () => Unit) => Any) {
-			command(name, List(), handle)
-		}
+		def command(command: TCommand[_])
+	}
 
-		def command(name: String, usage: String, handle: (TCommandEvent, () => Unit) => Any) {
-			command(name, List(usage), handle)
-		}
+	case class CommandQueryEvent(bot: CBot) extends TCommandCheckEvent {
+		def context = bot
 
-		def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any): Unit
+		val commands = new mutable.HashMap[String, TCommand[_]]()
+
+		override def command(command: TCommand[_]) {
+			commands(command.name) = command
+		}
 	}
 
 	trait TCommandEvent extends Event with IRCUserEvent with Replyable with TCommandCheckEvent {
@@ -75,26 +79,35 @@ object CommandPlugin extends PluginType[CommandPlugin] {
 		}
 
 		def cmd: String
-		def args: Seq[String]
+		def args: Arguments
 
-		override def command(name: String, usages: List[String], handle: (TCommandEvent, () => Unit) => Any) {
-			if(name == cmd) {
-				handle(this, () => {
-					genericReply("Usage: ")
-					for(usage <- usages) {
-						genericReply(s" - $cmd $usage")
-					}
-				})
+		override def command(command: TCommand[_]) {
+			def printUsage() {
+				genericReply("Usage: ")
+				for(usage <- command.usages) {
+					genericReply(s" - $cmd $usage")
+				}
+			}
+
+			if(command.name == cmd) {
+				try
+					command.asInstanceOf[TCommand[Any]].handle(this, command.parse(this))
+				catch {
+					case ex: InvalidUsageException =>
+						genericReply(ex.getMessage)
+//						ex.getStackTrace.map(_.toString).foreach(genericReply)
+						printUsage
+				}
 			}
 		}
 	}
 
-	case class CommandEvent[MSG <: MessageEvent with IRCUserEvent with Replyable](msgEvent: MSG, cmd: String, args: Seq[String]) extends TCommandEvent {
-		override def bot = msgEvent.bot
-		override def ircUser = msgEvent.ircUser
-		override def reply(msg: String) { msgEvent.reply(msg) }
-		override def genericReply(msg: String) { msgEvent.genericReply(msg) }
-		override def privateReply(msg: String) { msgEvent.privateReply(msg) }
-		override def context = msgEvent.context
+	case class CommandEvent[E <: IRCUserEvent with Replyable](event: E, cmd: String, args: Arguments) extends TCommandEvent {
+		override def bot = event.bot
+		override def ircUser = event.ircUser
+		override def reply(msg: String) { event.reply(msg) }
+		override def genericReply(msg: String) { event.genericReply(msg) }
+		override def privateReply(msg: String) { event.privateReply(msg) }
+		override def context = event.context
 	}
 }

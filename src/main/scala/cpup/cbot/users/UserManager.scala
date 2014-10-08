@@ -18,9 +18,9 @@ class UserManager(val bot: CBot) {
 
 	def fromNick(nick: String) = onlineUsers.getOrElseUpdate(nick, new IRCUser(bot, nick))
 	def fromNickServ(nickserv: String) = nickServUsers.getOrElse(nickserv, null)
-	def fromUsername(username: String) = registeredUsers.getOrElse(username, null)
+	def fromUsername(username: String) = registeredUsers.get(username)
 
-	def apply(username: String) = fromUsername(username)
+	def apply(username: String) = fromUsername(username).getOrElse(null)
 
 	def register(username: String, password: String = null) = {
 		if(registeredUsers.contains(username)) {

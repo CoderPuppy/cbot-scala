@@ -215,10 +215,10 @@ class SavingPlugin(pluginTypes: Map[String, PluginType[Plugin]], protected var _
 			val name = e.plugin.toString
 			e.context match {
 				case bot: CBot =>
-					plugins = new JsArray(plugins.value.filter(_ match {
-						case str: JsString if str == name => false
+					plugins = new JsArray(plugins.value.filter {
+						case str: JsString if str.value == name => false
 						case _ => true
-					}))
+					})
 
 				case user: User =>
 					updateUser(user)
